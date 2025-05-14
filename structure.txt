@@ -1,0 +1,84 @@
+workout-tracker/
+    ├── db/
+    │   └── migrations/
+    │       └── 001.create-tables.sql
+    ├── src/
+    │   ├── lib/
+    │   │   ├── api/
+    │   │   │   └── cardio.ts
+    │   │   ├── components/
+    │   │   │   └── Navbar.svelte
+    │   │   ├── stores/
+    │   │   │   ├── user.ts
+    │   │   │   └── workoutStore.ts
+    │   │   ├── utils/
+    │   │   │   ├── localStorage.ts
+    │   │   │   └── status.ts
+    │   │   ├── api.ts
+    │   │   ├── index.ts
+    │   │   ├── log.ts
+    │   │   └── types.ts
+    │   ├── routes/
+    │   │   ├── api/
+    │   │   │   └── workout/
+    │   │   │       ├── [id]/
+    │   │   │       │   └── +server.ts
+    │   │   │       └── +server.ts
+    │   │   ├── auth/
+    │   │   │   ├── confirm/
+    │   │   │   │   └── +server.ts
+    │   │   │   ├── login/
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   ├── logout/
+    │   │   │   │   └── +server.ts
+    │   │   │   └── register/
+    │   │   │       ├── +page.server.ts
+    │   │   │       └── +page.svelte
+    │   │   ├── private/
+    │   │   │   ├── dashboard/
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   ├── onboarding/
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   ├── profile/
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   ├── workout/
+    │   │   │   │   ├── history/
+    │   │   │   │   │   ├── +page.server.ts
+    │   │   │   │   │   └── +page.svelte
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   └── +layout.server.ts
+    │   │   ├── +layout.server.ts
+    │   │   ├── +layout.svelte
+    │   │   ├── +layout.ts
+    │   │   ├── +page.server.ts
+    │   │   └── +page.svelte
+    │   ├── app.css
+    │   ├── app.d.ts
+    │   ├── app.html
+    │   └── hooks.server.ts
+    ├── static/
+    │   └── favicon.png
+    ├── .env
+    ├── .env.local
+    ├── .gitignore
+    ├── .npmrc
+    ├── .prettierignore
+    ├── .prettierrc
+    ├── app.css
+    ├── eslint.config.js
+    ├── generateFileTree.js
+    ├── package-lock.json
+    ├── package.json
+    ├── pnpm-lock.yaml
+    ├── README.md
+    ├── structure.txt
+    ├── svelte.config.js
+    ├── tailwind.config.js
+    ├── test.txt
+    ├── tsconfig.json
+    └── vite.config.ts
