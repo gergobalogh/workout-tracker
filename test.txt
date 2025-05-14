@@ -1,0 +1,65 @@
+	return {
+		workout_name: 'Triathlon Training Full-Body Workout',
+		warm_up:
+			'5-10 minutes of light cardio and dynamic warm-up exercises focusing on hip flexors, hamstrings, shoulders, and core activation',
+		exercises: [
+			{
+				name: 'Front Squats',
+				sets: 4,
+				reps: '6',
+				rest: '90 seconds',
+				description: '70kg',
+				notes: 'it went well'
+			},
+			{
+				name: 'Push Press',
+				sets: 3,
+				reps: '8',
+				rest: '60 seconds',
+				description: '25kg dumbbells',
+				notes: 'felt strong'
+			},
+			{
+				name: 'Single-Arm Dumbbell Rows',
+				sets: 3,
+				reps: '10 each side',
+				rest: '60 seconds',
+				description: '20kg dumbbell',
+				notes: 'it went well'
+			},
+			{
+				name: 'Step-ups',
+				sets: 3,
+				reps: '12 each leg',
+				rest: '60 seconds',
+				description: 'body weight',
+				notes: ''
+			},
+			{
+				name: 'Kettlebell Snatches',
+				sets: 4,
+				reps: '15',
+				rest: '45 seconds',
+				description: '16kg kettlebell',
+				notes: ''
+			},
+			{
+				name: 'Pallof Press',
+				sets: 3,
+				reps: '12 each side',
+				rest: '30 seconds',
+				description: '10kg',
+				notes: ''
+			}
+		],
+		cardio: {
+			type: 'Indoor Cycling',
+			distance: 0,
+			duration: '20 minutes',
+			description:
+				'moderate intensity focusing on cadence and resistance levels suitable for endurance training'
+		},
+		cool_down: 'Stretching focusing on hip flexors, hamstrings, shoulders, back, and core',
+		notes:
+			'Emphasize proper form and technique, incorporate unilateral and functional movements, integrate core exercises, prioritize flexibility and mobility work'
+	};
