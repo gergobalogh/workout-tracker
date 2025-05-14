@@ -1,7 +1,12 @@
-import { type Actions } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
-export const actions = {
-    POST: async ({ request, locals: { supabase } }) => {
-        //	const { error } = await supabase.auth.signOut();
+export const POST: RequestHandler = async ({ locals: { supabase } }) => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+        return json({ success: false, message: error.message }, { status: 500 });
     }
-} satisfies Actions;
+
+    return json({ success: true });
+};

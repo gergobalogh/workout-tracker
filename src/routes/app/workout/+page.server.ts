@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { json } from '@sveltejs/kit';
+import type { Workout } from '../../../lib/types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
     try {
@@ -47,9 +48,16 @@ export const actions = {
                 message: 'Workout generation started',
                 generationId: Date.now().toString() // Use as a unique ID for this generation
             });
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error starting workout generation:', error);
-            return json({ error: error.message }, { status: 500 });
+
+            let errorMessage = 'An unknown error occurred';
+
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            return json({ error: errorMessage }, { status: 500 });
         }
     }
 };
@@ -90,7 +98,7 @@ async function loadUserData(userId: string, supabase: any) {
     }
 
     // Get all workout IDs
-    const workoutIds = workouts.map((workout) => workout.workoutid);
+    const workoutIds = workouts.map((workout: Workout) => workout.id);
 
     // Use Promise.all to fetch cardio and workout exercises concurrently
     const [cardioResult, workoutExercisesResult] = await Promise.all([

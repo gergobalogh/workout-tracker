@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, safeGetS
         const { data: workout, error: workoutError } = await supabase
             .from('workouts')
             .select('*')
-            .eq('workoutid', workoutId)
+            .eq('id', workoutId)
             .eq('profileid', session.user.id)
             .single();
 

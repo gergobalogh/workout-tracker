@@ -42,7 +42,7 @@
 	}
 
 	// Function to get workout details
-	async function getWorkoutDetails(workoutId) {
+	async function getWorkoutDetails(workoutId: number) {
 		isLoading = true;
 		error = null;
 		selectedWorkout = workoutId;
@@ -161,7 +161,7 @@
 										</p>
 									</div>
 									<button
-										on:click={() => getWorkoutDetails(workout.workoutid)}
+										on:click={() => getWorkoutDetails(workout.id)}
 										class="py-1 px-3 bg-stone-600 hover:bg-stone-700 text-white text-sm rounded-md font-medium shadow-sm focus:outline-none transition-colors"
 									>
 										View Details

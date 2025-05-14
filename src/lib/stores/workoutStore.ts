@@ -18,7 +18,8 @@ const initialWorkout: Workout = {
         description: '',
         completed: false
     },
-    cool_down: ''
+    cool_down: '',
+    workout_date: ''
 };
 
 // Try to load from localStorage

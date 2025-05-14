@@ -147,8 +147,8 @@
 			const result: DatabaseWorkout = await response.json();
 
 			// If this is the first save and we got a workoutId back, save it to the workout
-			if (!workout.workoutId && result.workoutId) {
-				workout.workoutId = result.workoutId;
+			if (!workout.id && result.id) {
+				workout.id = result.id;
 			}
 
 		} catch (err) {
@@ -175,7 +175,7 @@
 					weight: exercise.weight || 0,
 					notes: exercise.note || exercise.instructions,
 					completed: exercise.completed,
-					normalized_exercise_name: exercise.normalized_name,
+					normalized_name: exercise.normalized_name,
 					workout_name: workout.workout_name
 				})
 			});

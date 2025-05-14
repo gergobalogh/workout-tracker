@@ -4,7 +4,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
     try {
         // Get the session from locals
         const session = await safeGetSession();
-        if (!session) {
+        if (!session || !session.user) {
             return json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -14,7 +14,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             workoutId,
             exercise_name,
             workout_name,
-            normalized_exercise_name,
+            normalized_name,
             sets,
             reps,
             weight,
@@ -33,14 +33,14 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                     workout_name: workout_name,
                     created_at: new Date().toISOString()
                 })
-                .select('workoutid')
+                .select('id')
                 .single();
 
             if (workoutError) {
                 console.error('Error creating workout:', workoutError);
                 return json({ error: 'Failed to create workout' }, { status: 500 });
             }
-            currentWorkoutId = workoutData.workoutid;
+            currentWorkoutId = workoutData.id;
         }
 
         // Check if this exercise already exists for this workout
@@ -66,7 +66,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                 weight,
                 notes,
                 completed,
-                normalized_exercise_name,
+                normalized_name,
                 completed_at: new Date().toISOString()
             };
 
@@ -90,7 +90,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                     workoutid: currentWorkoutId,
                     user_id: session.user.id,
                     exercise_name,
-                    normalized_exercise_name,
+                    normalized_name,
                     sets,
                     reps,
                     weight,

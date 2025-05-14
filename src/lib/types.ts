@@ -25,6 +25,7 @@ export type Workout = {
     exercises: Exercise[];
     cardio: Cardio;
     cool_down: string;
+    workout_date: string;
 };
 
 export type CardioType = 'Running' | 'Cycling' | 'Swimming' | 'Rowing' | 'Walking'; // Expand as needed

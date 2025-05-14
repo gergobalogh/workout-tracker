@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 export async function POST({ request, locals: { supabase, safeGetSession } }) {
     try {
         const session = await safeGetSession();
-        if (!session) {
+        if (!session || !session.user) {
             return json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -17,18 +17,18 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             const { data: workoutData, error: workoutError } = await supabase
                 .from('workouts')
                 .insert({
-                    user_id: session.user.id,
+                    user_id: session.user?.id,
                     workout_name,
                     created_at: new Date().toISOString()
                 })
-                .select('workoutid')
+                .select('id')
                 .single();
 
             if (workoutError) {
                 console.error('Error creating workout:', workoutError);
                 return json({ error: 'Failed to create workout' }, { status: 500 });
             }
-            currentWorkoutId = workoutData.workoutid;
+            currentWorkoutId = workoutData.id;
         }
 
         // Check if cardio already exists for this workout
@@ -36,7 +36,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             .from('workoutcardio')
             .select('workout_cardio_id')
             .eq('workoutid', currentWorkoutId)
-            .eq('user_id', session.user.id);
+            .eq('user_id', session.user?.id);
 
         if (queryError) {
             console.error('Error querying for existing cardio:', queryError);
@@ -71,7 +71,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                 .from('workoutcardio')
                 .insert({
                     workoutid: currentWorkoutId,
-                    user_id: session.user.id,
+                    user_id: session.user?.id,
                     type,
                     distance,
                     completed,

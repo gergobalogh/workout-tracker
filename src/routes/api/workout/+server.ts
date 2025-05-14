@@ -112,10 +112,10 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                                 console.log('-------------------');
                                 if (matches && !matchError) {
                                     // Find the best match using Levenshtein ratio
-                                    const bestMatch = matches.find((match) => {
+                                    const bestMatch = matches.find((match: any) => {
                                         const maxLength = Math.max(
                                             normalizedName.length,
-                                            match.normalized_exercise_name.length
+                                            match.normalized_name.length
                                         );
                                         const ratio = match.distance / maxLength;
                                         return ratio <= 0.15; // Accept match if 85%+ similar
@@ -124,8 +124,7 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                                     if (bestMatch) {
                                         // Replace name with matched one for consistency
                                         exercise.name = bestMatch.exercise_name;
-                                        exercise.normalized_name =
-                                            bestMatch.normalized_exercise_name;
+                                        exercise.normalized_name = bestMatch.normalized_name;
 
                                         // Add the latest weight from best match
                                         exercise.weight = bestMatch.weight;
@@ -159,12 +158,14 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                     controller.close();
                 } catch (error) {
                     console.error('Error during workout generation process:', error);
-                    controller.enqueue(
-                        encoder.encode(
-                            `data: ${JSON.stringify({ loadingStep: 'error', error: error.message })}\n\n`
-                        )
-                    );
-                    controller.close();
+                    if (error instanceof Error) {
+                        controller.enqueue(
+                            encoder.encode(
+                                `data: ${JSON.stringify({ loadingStep: 'error', error: error.message })}\n\n`
+                            )
+                        );
+                        controller.close();
+                    }
                 }
             }
         });
@@ -178,7 +179,12 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
         });
     } catch (error) {
         console.error('Error in workout generation API:', error);
-        return json({ error: error.message }, { status: 500 });
+        let errorMessage = 'An unknown error occurred';
+
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        return json({ error: errorMessage }, { status: 500 });
     }
 };
 
@@ -307,7 +313,7 @@ async function loadUserData(userId: string, supabase: any) {
     }
 
     // Get all workout IDs
-    const workoutIds = workouts.map((workout) => workout.workoutid);
+    const workoutIds = workouts.map((workout: Workout) => workout.id);
 
     // Use Promise.all to fetch cardio and workout exercises concurrently
     const [cardioResult, workoutExercisesResult] = await Promise.all([

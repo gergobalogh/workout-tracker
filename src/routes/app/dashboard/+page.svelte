@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 	import { Chart, registerables } from 'chart.js';
+	import type { Exercise, Workout } from '$lib/types';
 
 	Chart.register(...registerables);
 	export let data: PageData;
@@ -24,8 +25,8 @@
 
 	// Calculate total duration and calories (placeholder values since these aren't in your schema)
 	// In a real implementation, you might calculate these from your exercise data
-	const totalDuration = calculateTotalDuration(workoutExercises, cardio);
-	const caloriesBurned = calculateTotalCalories(workoutExercises, cardio);
+	const totalDuration = calculateTotalDuration(workoutExercises,);
+	const caloriesBurned = calculateTotalCalories(workoutExercises);
 
 	// Group workouts by day for the chart
 	const workoutsByDay = groupWorkoutsByDay(workouts);
@@ -47,14 +48,14 @@
 	let monthlyDurationGoal = currentLevel?.minutes_required || 300;
 	let monthlyCaloriesGoal = currentLevel?.calories_required || 1500;
 
-	function calculateTotalDuration(exercises: any[], cardioEntries: any[]): number {
+	function calculateTotalDuration(exercises: Exercise[]): number {
 		// For workout exercises, assume duration based on sets (e.g., 2 minutes per set)
 		const exercisesDuration = exercises.reduce((sum, ex) => sum + (ex.sets * 2 || 0), 0);
 
 		return exercisesDuration;
 	}
 
-	function calculateTotalCalories(exercises: any[], cardioEntries: any[]): number {
+	function calculateTotalCalories(exercises: Exercise[]): number {
 		// Estimate calories for workout exercises (very rough approximation)
 		const exercisesCalories = exercises.reduce((sum, ex) => {
 			// Rough estimate: 3 calories per rep * weight in kg / 10
@@ -71,11 +72,11 @@
 		return Math.round(exercisesCalories);
 	}
 
-	function groupWorkoutsByDay(workoutsData: any[]): { day: string, count: number }[] {
+	function groupWorkoutsByDay(workoutsData: Workout[]): { day: string, count: number }[] {
 		const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 		const result = days.map((day) => ({ day, count: 0 }));
 
-		workoutsData.forEach((workout) => {
+		workoutsData.forEach((workout: Workout) => {
 			if (workout.workout_date) {
 				const date = new Date(workout.workout_date);
 				const dayIndex = date.getDay();
@@ -481,8 +482,8 @@
 								<div>
 									<h3 class='font-medium text-stone-800 dark:text-white'>{exercise.exercise_name}</h3>
 									<p class='text-sm cursor-default text-stone-500 dark:text-stone-400'>
-										{#if workouts.find(w => w.workoutid === exercise.workoutid)}
-											{new Date(workouts.find(w => w.workoutid === exercise.workoutid).workout_date).toLocaleDateString()}
+										{#if workouts.find(w => w.id === exercise.workoutid)}
+											{new Date(workouts.find(w => w.id === exercise.workoutid).workout_date).toLocaleDateString()}
 										{:else}
 											Recent
 										{/if}
@@ -502,8 +503,8 @@
 								<div>
 									<h3 class='font-medium text-stone-800 dark:text-white'>{cardioItem.type} Cardio</h3>
 									<p class='text-sm text-stone-500 dark:text-stone-400'>
-										{#if workouts.find(w => w.workoutid === cardioItem.workoutid)}
-											{new Date(workouts.find(w => w.workoutid === cardioItem.workoutid).workout_date).toLocaleDateString()}
+										{#if workouts.find(w => w.id === cardioItem.workoutid)}
+											{new Date(workouts.find(w => w.id === cardioItem.workoutid).workout_date).toLocaleDateString()}
 										{:else}
 											Recent
 										{/if}

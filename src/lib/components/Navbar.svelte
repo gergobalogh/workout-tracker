@@ -1,9 +1,9 @@
 <script lang='ts'>
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import { onMount, afterUpdate } from 'svelte';
+	import { onMount } from 'svelte';
 	import { safeLocalStorageGet } from '../utils/localStorage';
-	export let user: boolean;
+	const { user } = $props<{ user: boolean }>();
 	// Track if the mobile menu is open
 	let isMenuOpen = false;
 	// Track dark mode
@@ -54,12 +54,29 @@
 	});
 
 	// Close menu when navigation occurs
-	afterUpdate(() => {
+	$effect(() => {
 		if (currentPath !== page.url.pathname) {
 			closeMenu();
 			currentPath = page.url.pathname;
 		}
 	});
+	async function handleLogout() {
+		try {
+			const response = await fetch('/auth/logout', {
+				method: 'POST'
+			});
+			const result = await response.json();
+
+			if (result.success) {
+				// Redirect to login page or homepage after logout
+				window.location.href = '/login';
+			} else {
+				console.error('Logout failed:', result.message);
+			}
+		} catch (err) {
+			console.error('Error logging out:', err);
+		}
+	}
 </script>
 <nav class='bg-white dark:bg-gray-800 shadow-md'>
 	<div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -148,7 +165,7 @@
 						</div>
 					</a>
 					<a
-						href='/app/logout'
+						href='/auth/logout'
 						class='bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800'
 					>
 						Logout
@@ -281,7 +298,7 @@
 						</div>
 					</a>
 					<a
-						href='/app/logout'
+						href='/auth/logout'
 						class='border-transparent text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
 					>
 						Logout
