@@ -17,7 +17,7 @@
 	<title>Register | Workout Tracker</title>
 </svelte:head>
 
-<div class='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8'>
+<div class='min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
 	<div class='max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md'>
 		<!-- Header -->
 		<div class='text-center'>

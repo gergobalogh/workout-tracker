@@ -1,12 +1,14 @@
 workout-tracker/
-    ├── db/
-    │   └── migrations/
-    │       └── 001.create-tables.sql
+    ├── .wrangler/
+    │   └── state/
+    │       └── v3/
+    │           └── workflows/
     ├── src/
     │   ├── lib/
-    │   │   ├── api/
-    │   │   │   └── cardio.ts
     │   │   ├── components/
+    │   │   │   ├── CardioItem.svelte
+    │   │   │   ├── ExerciseItem.svelte
+    │   │   │   ├── Modal.svelte
     │   │   │   └── Navbar.svelte
     │   │   ├── stores/
     │   │   │   ├── user.ts
@@ -23,19 +25,14 @@ workout-tracker/
     │   │   │   └── workout/
     │   │   │       ├── [id]/
     │   │   │       │   └── +server.ts
+    │   │   │       ├── cardio/
+    │   │   │       │   └── +server.ts
+    │   │   │       ├── exercise/
+    │   │   │       │   ├── instructions/
+    │   │   │       │   │   └── +server.ts
+    │   │   │       │   └── +server.ts
     │   │   │       └── +server.ts
-    │   │   ├── auth/
-    │   │   │   ├── confirm/
-    │   │   │   │   └── +server.ts
-    │   │   │   ├── login/
-    │   │   │   │   ├── +page.server.ts
-    │   │   │   │   └── +page.svelte
-    │   │   │   ├── logout/
-    │   │   │   │   └── +server.ts
-    │   │   │   └── register/
-    │   │   │       ├── +page.server.ts
-    │   │   │       └── +page.svelte
-    │   │   ├── private/
+    │   │   ├── app/
     │   │   │   ├── dashboard/
     │   │   │   │   ├── +page.server.ts
     │   │   │   │   └── +page.svelte
@@ -52,11 +49,26 @@ workout-tracker/
     │   │   │   │   ├── +page.server.ts
     │   │   │   │   └── +page.svelte
     │   │   │   └── +layout.server.ts
+    │   │   ├── auth/
+    │   │   │   ├── confirm/
+    │   │   │   │   └── +server.ts
+    │   │   │   ├── login/
+    │   │   │   │   ├── +page.server.ts
+    │   │   │   │   └── +page.svelte
+    │   │   │   ├── logout/
+    │   │   │   │   └── +server.ts
+    │   │   │   └── register/
+    │   │   │       ├── +page.server.ts
+    │   │   │       └── +page.svelte
+    │   │   ├── workout/
+    │   │   │   ├── +page.server.ts
+    │   │   │   └── +page.svelte
     │   │   ├── +layout.server.ts
     │   │   ├── +layout.svelte
     │   │   ├── +layout.ts
     │   │   ├── +page.server.ts
     │   │   └── +page.svelte
+    │   ├── additional-svelte-typings.d.ts
     │   ├── app.css
     │   ├── app.d.ts
     │   ├── app.html
@@ -64,8 +76,10 @@ workout-tracker/
     ├── static/
     │   └── favicon.png
     ├── .env
+    ├── .env.example
     ├── .env.local
     ├── .gitignore
+    ├── .node-version
     ├── .npmrc
     ├── .prettierignore
     ├── .prettierrc

@@ -34,17 +34,17 @@
 	function getLoadingMessage(step: string) {
 		switch (step) {
 			case 'generate':
-				return 'Generating your workout...';
+				return 'Generating your demo...';
 			case 'critique':
-				return 'Evaluating workout effectiveness...';
+				return 'Evaluating demo effectiveness...';
 			case 'json_conversion':
-				return 'Formatting workout details...';
+				return 'Formatting demo details...';
 			case 'adding_weights':
 				return 'Adding your previous weights...';
 			case 'complete':
 				return 'Workout generation complete!';
 			case 'error':
-				return 'Error generating workout';
+				return 'Error generating demo';
 			default:
 				return 'Processing...';
 		}
@@ -146,7 +146,7 @@
 
 			const result: DatabaseWorkout = await response.json();
 
-			// If this is the first save and we got a workoutId back, save it to the workout
+			// If this is the first save and we got a workoutId back, save it to the demo
 			if (!workout.id && result.id) {
 				workout.id = result.id;
 			}
@@ -192,7 +192,7 @@
 				id: data.workoutId
 			}));
 		} catch (error) {
-			console.error('Error saving workout exercise:', error);
+			console.error('Error saving demo exercise:', error);
 			throw error;
 		}
 	};
@@ -240,7 +240,7 @@
 
 		try {
 			// Start the generation process with Server-Sent Events
-			eventSource = new EventSource('/api/workout');
+			eventSource = new EventSource('/api/demo');
 
 			eventSource.onmessage = async (event) => {
 				try {
@@ -251,7 +251,7 @@
 						await tick();
 
 						if (data.loadingStep === 'error') {
-							error = data.error || 'An error occurred during workout generation';
+							error = data.error || 'An error occurred during demo generation';
 							eventSource.close();
 							isGenerating = false;
 						}
@@ -292,7 +292,7 @@
 				isGenerating = false;
 			};
 		} catch (err) {
-			console.error('Error starting workout generation:', err);
+			console.error('Error starting demo generation:', err);
 			error = err.message || 'An error occurred';
 			isGenerating = false;
 		}
@@ -471,7 +471,7 @@
 				</div>
 			{/if}
 
-			<!-- Generate New Workout button when workout is displayed -->
+			<!-- Generate New Workout button when demo is displayed -->
 			<div class='mt-6'>
 				<button
 					on:click={generateWorkout}

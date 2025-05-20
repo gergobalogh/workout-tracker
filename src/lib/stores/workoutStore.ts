@@ -8,28 +8,14 @@ import {
 
 const STORAGE_KEY = 'workout';
 
-const initialWorkout: Workout = {
-    workout_name: '',
-    warm_up: '',
-    exercises: [],
-    cardio: {
-        type: '',
-        distance: 0,
-        description: '',
-        completed: false
-    },
-    cool_down: '',
-    workout_date: ''
-};
-
 // Try to load from localStorage
-let storedWorkout: Workout = initialWorkout;
+let storedWorkout: Workout | null = null;
 const storedValue = safeLocalStorageGet(STORAGE_KEY);
 if (storedValue) {
     try {
         storedWorkout = JSON.parse(storedValue);
     } catch (e) {
-        console.error('Failed to parse stored workout:', e);
+        console.error('Failed to parse stored demo:', e);
     }
 }
 
@@ -40,6 +26,11 @@ workoutStore.subscribe((value) => {
     try {
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(value));
     } catch (e) {
-        console.error('Failed to save workout to localStorage:', e);
+        console.error('Failed to save demo to localStorage:', e);
     }
 });
+
+export const clearWorkout = () => {
+    safeLocalStorageRemove(STORAGE_KEY);
+    workoutStore.set(undefined);
+};

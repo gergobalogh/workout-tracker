@@ -28,9 +28,10 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
     }
 };
 
-// Create a POST endpoint to start workout generation
+// Create a POST endpoint to start demo generation
 export const actions = {
     generateWorkout: async ({ request, locals: { supabase, safeGetSession } }) => {
+        console.log('generateWorkout called');
         const session = await safeGetSession();
         if (!session?.user?.id) {
             return json({ error: 'Not authenticated' }, { status: 401 });
@@ -49,7 +50,7 @@ export const actions = {
                 generationId: Date.now().toString() // Use as a unique ID for this generation
             });
         } catch (error: unknown) {
-            console.error('Error starting workout generation:', error);
+            console.error('Error starting demo generation:', error);
 
             let errorMessage = 'An unknown error occurred';
 
@@ -97,17 +98,17 @@ async function loadUserData(userId: string, supabase: any) {
         };
     }
 
-    // Get all workout IDs
+    // Get all demo IDs
     const workoutIds = workouts.map((workout: Workout) => workout.id);
 
-    // Use Promise.all to fetch cardio and workout exercises concurrently
+    // Use Promise.all to fetch cardio and demo exercises concurrently
     const [cardioResult, workoutExercisesResult] = await Promise.all([
         supabase.from('workoutcardio').select('*').in('workoutid', workoutIds),
         supabase.from('workoutexercises').select('*').in('workoutid', workoutIds)
     ]);
 
     if (cardioResult.error || workoutExercisesResult.error) {
-        throw new Error('Failed to load cardio or workout exercises');
+        throw new Error('Failed to load cardio or demo exercises');
     }
     const groupedByDate = formatWorkoutData(workoutExercisesResult.data).reduce(
         (acc, workout) => {

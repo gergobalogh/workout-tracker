@@ -1,25 +1,37 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
+	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 	export let form;
 
 	$: profile = data.profile || {};
-
-	// Form data with fallbacks
 	$: formData = form?.data ?? {};
-	$: username = formData?.username ?? profile.username ?? '';
-	$: age = formData?.age ?? profile.age ?? '';
-	$: height = formData?.height ?? profile.height ?? '';
-	$: goalWeight = formData?.goalWeight ?? profile.goal_weight ?? '';
-	$: goal = formData?.goal ?? profile.goal ?? '';
-	$: showRestTime = formData?.showRestTime ?? profile.show_rest_time ?? false;
-	// Form validation errors
+
+	$: username = formData.username ?? profile.username ?? '';
+	$: age = formData.age ?? profile.age ?? '';
+	$: height = formData.height ?? profile.height ?? '';
+	$: goalWeight = formData.goalWeight ?? profile.goal_weight ?? '';
+	$: goal = formData.goal ?? profile.goal ?? '';
+	$: showRestTime = formData.showRestTime ?? profile.show_rest_time ?? false;
 	$: error = form?.error ?? '';
 	$: message = form?.message ?? '';
 	$: success = form?.success ?? false;
 	$: errors = form?.errors ?? {};
+
+	// Enhanced form submission with page refresh on success
+	const handleEnhance = () => {
+		return async ({ result, update }) => {
+			// Update the form state
+			await update();
+
+			// If the submission was successful, invalidate all data to refresh
+			if (result.type === 'success' && result.data?.success) {
+				await invalidateAll();
+			}
+		};
+	};
 </script>
 
 <svelte:head>
@@ -47,7 +59,7 @@
 			</div>
 		{/if}
 
-		<form method="POST" action="?/updateProfile" class="space-y-6" use:enhance>
+		<form method="POST" action="?/updateProfile" class="space-y-6" use:enhance={handleEnhance}>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<!-- Username -->
 				<div>
@@ -142,6 +154,8 @@
 
 			<!-- Show Rest Time Toggle -->
 			<div class="flex items-center">
+				<input type="hidden" name="show-rest-time-submitted" value="true">
+
 				<input
 					id="show-rest-time"
 					name="show-rest-time"

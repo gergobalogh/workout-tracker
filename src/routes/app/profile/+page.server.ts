@@ -1,16 +1,16 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import type { Profile } from '../../../lib/types';
+import { ltc } from '../../../lib/log';
 
 // Load the profile data from Supabase
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
     const session = await safeGetSession();
-
     if (!session?.user?.id) {
         return {
             profile: null
         };
     }
-
     // Fetch the user's profile data
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -43,7 +43,7 @@ export const actions: Actions = {
         const username = data.get('username')?.toString() || '';
         const age = Number(data.get('age')) || null;
         const height = Number(data.get('height')) || null;
-        const currentWeight = Number(data.get('current-weight')) || null;
+        // Get current_weight from database since it's not in the form
         const goalWeight = Number(data.get('goal-weight')) || null;
         const goal = data.get('goal')?.toString() || '';
         const showRestTime = data.get('show-rest-time') === 'on';
@@ -64,10 +64,6 @@ export const actions: Actions = {
             errors.height = 'Please enter a valid height';
         }
 
-        if (currentWeight !== null && currentWeight <= 0) {
-            errors.currentWeight = 'Please enter a valid weight';
-        }
-
         if (goalWeight !== null && goalWeight <= 0) {
             errors.goalWeight = 'Please enter a valid goal weight';
         }
@@ -80,7 +76,6 @@ export const actions: Actions = {
                     username,
                     age,
                     height,
-                    currentWeight,
                     goalWeight,
                     goal,
                     showRestTime
@@ -88,28 +83,46 @@ export const actions: Actions = {
             };
         }
 
+        // Get the current profile to preserve the current_weight value
+        const { data: currentProfile } = await supabase
+            .from('profiles')
+            .select('current_weight')
+            .eq('user_id', session.user.id)
+            .single();
+
         // Update the profile in Supabase
-        const { error } = await supabase
+        const { data: updatedProfiles, error } = await supabase
             .from('profiles')
             .update({
                 username,
                 age,
                 height,
-                current_weight: currentWeight,
+                current_weight: currentProfile?.current_weight || null, // Preserve existing value
                 goal_weight: goalWeight,
                 goal,
                 show_rest_time: showRestTime,
                 updated_at: new Date().toISOString()
             })
-            .eq('user_id', session.user.id);
+            .eq('user_id', session.user.id)
+            .select();
+
+        const updatedProfile: Profile = updatedProfiles?.[0];
 
         if (error) {
-            return fail(400, { message: 'Failed to update profile' });
+            return fail(400, {
+                success: false,
+                error: 'Failed to update profile'
+            });
         }
 
         return {
             success: true,
-            message: 'Profile updated successfully'
+            message: 'Profile updated successfully',
+            username: updatedProfile?.username,
+            age: updatedProfile?.age,
+            goalWeight: updatedProfile?.goal_weight,
+            goal: updatedProfile?.goal,
+            showRestTime: updatedProfile?.show_rest_time
         };
     }
 };

@@ -1,0 +1,58 @@
+{
+  "workout_name": "Optimized Full-Body Gym Workout",
+  "warm_up": "5 minutes of light cardio (jogging or cycling) and dynamic stretches for 5-10 minutes focusing on major muscle groups",
+  "exercises": [
+    {
+      "name": "Barbell Squats",
+      "sets": 4,
+      "reps": 10,
+      "rest": 60,
+      "normalized_name": "barbell squats",
+      "completed": false
+    },
+    {
+      "name": "Deadlifts",
+      "sets": 4,
+      "reps": 8,
+      "rest": 60,
+      "normalized_name": "deadlifts"
+    },
+    {
+      "name": "Dumbbell Shoulder Press",
+      "sets": 4,
+      "reps": 12,
+      "rest": 45,
+      "normalized_name": "dumbbell shoulder press"
+    },
+    {
+      "name": "Bent-Over Rows",
+      "sets": 4,
+      "reps": 12,
+      "rest": 45,
+      "normalized_name": "bent over rows"
+    },
+    {
+      "name": "Dumbbell Lunges",
+      "sets": 4,
+      "reps": "12 (each leg)",
+      "rest": 45,
+      "normalized_name": "dumbbell lunges",
+      "completed": false,
+      "note": "test notes"
+    },
+    {
+      "name": "Plank",
+      "sets": 3,
+      "reps": "45 seconds",
+      "rest": 45,
+      "normalized_name": "plank",
+      "weight": 15
+    }
+  ],
+  "cardio": {
+    "type": "Treadmill",
+    "distance": 25,
+    "description": "Start with a 5-minute warm-up at a comfortable pace. Alternate between 2 minutes of jogging and 1 minute of walking for 15 minutes. Finish with a 5-minute cooldown at a slow pace."
+  },
+  "cool_down": "Static stretches focusing on major muscle groups for 10 minutes"
+}

@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, safeGetS
             return json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        // Fetch the workout
+        // Fetch the demo
         const { data: workout, error: workoutError } = await supabase
             .from('workouts')
             .select('*')
@@ -23,11 +23,11 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, safeGetS
             .single();
 
         if (workoutError) {
-            console.error('Error fetching workout:', workoutError);
+            console.error('Error fetching demo:', workoutError);
             return json({ error: 'Workout not found' }, { status: 404 });
         }
 
-        // Fetch workout exercises
+        // Fetch demo exercises
         const { data: exercises, error: exercisesError } = await supabase
             .from('workoutexercises')
             .select('*')
@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, safeGetS
             return json({ error: 'Failed to fetch exercises' }, { status: 500 });
         }
 
-        // Fetch workout cardio
+        // Fetch demo cardio
         const { data: cardio, error: cardioError } = await supabase
             .from('workoutcardio')
             .select('*')

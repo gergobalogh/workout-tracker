@@ -14,7 +14,7 @@
     <title>Login | Workout Tracker</title>
 </svelte:head>
 
-<div class='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8'>
+<div class='min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
     <div class='max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md'>
         <div class='text-center'>
             <h1 class='mt-6 text-3xl font-extrabold text-stone-950 dark:text-white'>Sign in to your account</h1>

@@ -1,8 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { ENVIRONMENT } from '$env/static/private';
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+const isDev = ENVIRONMENT === 'dev';
 
 const supabase: Handle = async ({ event, resolve }) => {
     /**
@@ -20,12 +22,11 @@ const supabase: Handle = async ({ event, resolve }) => {
              */
             setAll: (cookiesToSet) => {
                 cookiesToSet.forEach(({ name, value, options }) => {
-                    //@TODO FIX THIS when going in production
                     event.cookies.set(name, value, {
                         ...options,
                         path: '/',
-                        sameSite: 'lax', // or 'none' if using HTTPS
-                        secure: false // true if using HTTPS
+                        sameSite: isDev ? 'lax' : 'none', // or 'none' if using HTTPS
+                        secure: !isDev // true if using HTTPS
                     });
                 });
             }

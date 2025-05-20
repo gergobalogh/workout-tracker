@@ -4,10 +4,8 @@
 	import { onMount } from 'svelte';
 	import { safeLocalStorageGet } from '../utils/localStorage';
 	const { user } = $props<{ user: boolean }>();
-	// Track if the mobile menu is open
-	let isMenuOpen = false;
-	// Track dark mode
-	let isDarkMode = false;
+	let isMenuOpen = $state(false);
+	let isDarkMode = $state(false);
 	// Store current path to track navigation
 	let currentPath = '';
 
@@ -53,7 +51,6 @@
 		currentPath = page.url.pathname;
 	});
 
-	// Close menu when navigation occurs
 	$effect(() => {
 		if (currentPath !== page.url.pathname) {
 			closeMenu();
@@ -68,8 +65,7 @@
 			const result = await response.json();
 
 			if (result.success) {
-				// Redirect to login page or homepage after logout
-				window.location.href = '/login';
+				window.location.href = '/';
 			} else {
 				console.error('Logout failed:', result.message);
 			}
@@ -164,12 +160,12 @@
 							Profile
 						</div>
 					</a>
-					<a
-						href='/auth/logout'
+					<button
+						on:click={handleLogout}
 						class='bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800'
 					>
 						Logout
-					</a>
+					</button>
 				{:else }
 					<a
 						href='/auth/login'
@@ -297,12 +293,12 @@
 							Profile
 						</div>
 					</a>
-					<a
-						href='/auth/logout'
+					<button
+						on:click={handleLogout}
 						class='border-transparent text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
 					>
 						Logout
-					</a>
+					</button>
 				{:else }
 					<a
 						href='/auth/login'

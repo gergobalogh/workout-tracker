@@ -40,7 +40,7 @@
 	const ALGOLIA_APP_ID = 'OK539HIHRS';
 	const ALGOLIA_API_KEY = 'REMOVED_ALGOLIA_KEY';
 	const ALGOLIA_INDEX_NAME = 'exercises';
-	const SUPABASE_IMAGE_URL_BASE = 'https://begcfaxvjbeizhacrzft.supabase.co/storage/v1/object/public/exercise-images/';
+	const SUPABASE_IMAGE_URL_BASE = 'https://kblntpobgrtueucxxnlm.supabase.co/storage/v1/object/public/exercise-images/';
 	// Handle touch events to track swipe in progress
 	function handleTouchStart(event: TouchEvent) {
 		swipeState.active = true;
@@ -73,9 +73,34 @@
 			}
 		}
 	}
+	function scrollToNextExercise() {
+		// Only attempt to scroll on mobile devices
+		if (window.innerWidth <= 768) {
+			// Get all exercise cards
+			const exerciseCards = document.querySelectorAll('.exercise-card');
+
+			// If there are more exercises after this one
+			if (index < exerciseCards.length - 1) {
+				// Get the next exercise element
+				const nextExerciseElement = exerciseCards[index + 1] as HTMLElement;
+
+				if (nextExerciseElement) {
+					// Scroll the next exercise into view with smooth behavior
+					nextExerciseElement.scrollIntoView({
+						behavior: 'smooth',
+						block: 'center'
+					});
+				}
+			}
+		}
+	}
+
 	async function completeExercise(index: number) {
 		if(!exercise.completed) {
 			showHint = true;
+			setTimeout(() => {
+				scrollToNextExercise();
+			}, 300); // Short delay to allow the state to update
 		}
 		try {
 			await saveWorkoutExercise(exercise);
@@ -94,6 +119,11 @@
 			if (Math.abs(swipeState.currentX) > swipeThreshold) {
 				if (swipeState.direction === 'right') {
 				toggleExerciseCompleted(index);
+					if (!exercise.completed) {
+						setTimeout(() => {
+							scrollToNextExercise();
+						}, 300); // Short delay to allow state to update
+					}
 				} else if (swipeState.direction === 'left') {
 					openExerciseNotesModal(index);
 				}

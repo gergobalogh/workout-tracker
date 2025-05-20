@@ -2,7 +2,7 @@ export type Exercise = {
     name: string;
     sets: number;
     reps: string;
-    rest?: string;
+    rest?: number;
     weight: number;
     completed: boolean;
     instructions: string;
@@ -31,14 +31,16 @@ export type Workout = {
 export type CardioType = 'Running' | 'Cycling' | 'Swimming' | 'Rowing' | 'Walking'; // Expand as needed
 
 export type Profile = {
-    userid: string;
+    user_id: string;
     username: string;
-    email: string;
     lastUpdated: string;
-    weight: number;
+    current_weight: number;
     goal: string;
+    goal_weight: number;
     age?: string;
     monthly_progress_level: number;
+    show_rest_time: boolean;
+    onboarding_completed: boolean;
 };
 
 export type DatabaseExercise = Exercise & {

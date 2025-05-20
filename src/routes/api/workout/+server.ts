@@ -1,14 +1,15 @@
 import { OPENAI_API_KEY } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { Workout } from '../../../lib/types';
+import type { Workout } from '$lib/types';
+import { tryParseJSON } from '$lib/utils/jsonParser';
+import { normalizeExerciseName } from '$lib/utils/normalizer';
 
-export const GET: RequestHandler = async ({ request, locals: { supabase, safeGetSession } }) => {
+export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession } }) => {
     const session = await safeGetSession();
     if (!session?.user?.id) {
         return json({ error: 'Not authenticated' }, { status: 401 });
     }
-
     const userId = session.user.id;
 
     try {
@@ -108,8 +109,6 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                                 );
                                 console.log('-------------------');
                                 console.log(normalizedName);
-                                console.log(matches);
-                                console.log('-------------------');
                                 if (matches && !matchError) {
                                     // Find the best match using Levenshtein ratio
                                     const bestMatch = matches.find((match: any) => {
@@ -122,6 +121,9 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                                     });
 
                                     if (bestMatch) {
+                                        console.log(bestMatch.normalized_name);
+                                        console.log('-------------------');
+
                                         // Replace name with matched one for consistency
                                         exercise.name = bestMatch.exercise_name;
                                         exercise.normalized_name = bestMatch.normalized_name;
@@ -157,7 +159,7 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
                     );
                     controller.close();
                 } catch (error) {
-                    console.error('Error during workout generation process:', error);
+                    console.error('Error during demo generation process:', error);
                     if (error instanceof Error) {
                         controller.enqueue(
                             encoder.encode(
@@ -178,7 +180,7 @@ export const GET: RequestHandler = async ({ request, locals: { supabase, safeGet
             }
         });
     } catch (error) {
-        console.error('Error in workout generation API:', error);
+        console.error('Error in demo generation API:', error);
         let errorMessage = 'An unknown error occurred';
 
         if (error instanceof Error) {
@@ -197,7 +199,21 @@ async function generateWorkoutWithoutPreviousData(goal: string, userId: string, 
         userId,
         supabase
     });
+    const critique = await fetchOpenAI({
+        model: 'gpt-3.5-turbo',
+        system: `You are a certified strength and conditioning coach. Assess this workout based on the user's goal: ${goal}. Focus on balance, safety, effectiveness, and progression. Provide recommendations.`,
+        user: `Review the following workout:\n\n${workoutText}`,
+        userId,
+        supabase
+    });
 
+    const ultimate = await fetchOpenAI({
+        model: 'gpt-3.5-turbo',
+        system: 'You are an elite personal trainer. Optimize workouts based on critique while preserving intensity and purpose. Provide a clear, structured output with warm-up, exercises, cardio, and cool-down.',
+        user: `Workout:\n${workoutText}\n\nFeedback:\n${critique}`,
+        userId,
+        supabase
+    });
     const workoutJson = await fetchOpenAI({
         model: 'gpt-3.5-turbo',
         system: `Convert this workout into JSON with the following structure:\n{
@@ -207,7 +223,7 @@ async function generateWorkoutWithoutPreviousData(goal: string, userId: string, 
       cardio: { type: string, distance: number, description: string },
       cool_down: string
     }`,
-        user: workoutText,
+        user: ultimate,
         userId,
         supabase
     });
@@ -312,17 +328,17 @@ async function loadUserData(userId: string, supabase: any) {
         };
     }
 
-    // Get all workout IDs
+    // Get all demo IDs
     const workoutIds = workouts.map((workout: Workout) => workout.id);
 
-    // Use Promise.all to fetch cardio and workout exercises concurrently
+    // Use Promise.all to fetch cardio and demo exercises concurrently
     const [cardioResult, workoutExercisesResult] = await Promise.all([
         supabase.from('workoutcardio').select('*').in('workoutid', workoutIds),
         supabase.from('workoutexercises').select('*').in('workoutid', workoutIds)
     ]);
 
     if (cardioResult.error || workoutExercisesResult.error) {
-        throw new Error('Failed to load cardio or workout exercises');
+        throw new Error('Failed to load cardio or demo exercises');
     }
     const groupedByDate = formatWorkoutData(workoutExercisesResult.data).reduce(
         (acc, workout) => {
@@ -341,7 +357,7 @@ async function loadUserData(userId: string, supabase: any) {
             const dayExercises = workouts
                 .map(
                     (w) =>
-                        `- ${w.name}: ${w.sets}x${w.reps} @ ${w.weight}kg (Notes: ${w.notes || ''})`
+                        `- ${w.name}: ${w.sets} sets, ${w.reps} reps with weight: ${w.weight}kg ${w.notes ? `(Notes: ${w.notes})` : ''}`
                 )
                 .join('\n');
             return `${date}:\n${dayExercises}`;
@@ -379,23 +395,4 @@ function formatCardioData(cardio: any[]) {
         distance: cardioEntry.distance,
         notes: cardioEntry.notes || ''
     }));
-}
-
-function tryParseJSON(str: string) {
-    try {
-        return JSON.parse(str);
-    } catch (e) {
-        console.error('JSON parse error', e);
-        return { error: 'Could not parse JSON output.' };
-    }
-}
-
-function normalizeExerciseName(name: string) {
-    return name
-        .toLowerCase() // convert to lowercase
-        .normalize('NFKD') // normalize unicode (e.g., é -> e)
-        .replace(/[\u0300-\u036f]/g, '') // remove diacritics
-        .replace(/[^a-z0-9]+/g, ' ') // remove non-alphanumerics and collapse to space
-        .trim() // remove leading/trailing whitespace
-        .replace(/\s+/g, ' '); // collapse multiple spaces to one
 }

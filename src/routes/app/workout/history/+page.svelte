@@ -4,7 +4,7 @@
 
 	export let data;
 
-	// State for workout details
+	// State for demo details
 	let selectedWorkout = null;
 	let workoutDetails = null;
 	let isLoading = false;
@@ -41,7 +41,7 @@
 		});
 	}
 
-	// Function to get workout details
+	// Function to get demo details
 	async function getWorkoutDetails(workoutId: number) {
 		isLoading = true;
 		error = null;
@@ -52,14 +52,14 @@
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to fetch workout details');
+				throw new Error(errorData.error || 'Failed to fetch demo details');
 			}
 
 			const data = await response.json();
 			workoutDetails = data;
 			await tick();
 		} catch (err) {
-			console.error('Error fetching workout details:', err);
+			console.error('Error fetching demo details:', err);
 			error = err.message || 'An error occurred';
 			workoutDetails = null;
 		} finally {
@@ -88,7 +88,7 @@
 		}
 	};
 
-	// Clear workout details when returning to list
+	// Clear demo details when returning to list
 	function clearWorkoutDetails() {
 		workoutDetails = null;
 		selectedWorkout = null;
@@ -144,7 +144,7 @@
 			</div>
 		{/if}
 
-		<!-- Workout List (shown when no workout is selected) -->
+		<!-- Workout List (shown when no demo is selected) -->
 		{#if data.profile && !workoutDetails && !isLoading}
 			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 				{#if data.workouts && data.workouts.length > 0}
@@ -194,7 +194,7 @@
 			</div>
 		{/if}
 
-		<!-- Workout Detail View (shown when a workout is selected) -->
+		<!-- Workout Detail View (shown when a demo is selected) -->
 		{#if workoutDetails && !isLoading}
 			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 				<div class="flex justify-between items-center mb-6">

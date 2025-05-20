@@ -19,7 +19,7 @@
 
 	let username = profile?.username || 'Athlete';
 
-	// Calculate workout stats
+	// Calculate demo stats
 	const totalWorkouts = workouts.length;
 	const totalCardioSessions = cardio.length;
 
@@ -49,14 +49,14 @@
 	let monthlyCaloriesGoal = currentLevel?.calories_required || 1500;
 
 	function calculateTotalDuration(exercises: Exercise[]): number {
-		// For workout exercises, assume duration based on sets (e.g., 2 minutes per set)
+		// For demo exercises, assume duration based on sets (e.g., 2 minutes per set)
 		const exercisesDuration = exercises.reduce((sum, ex) => sum + (ex.sets * 2 || 0), 0);
 
 		return exercisesDuration;
 	}
 
 	function calculateTotalCalories(exercises: Exercise[]): number {
-		// Estimate calories for workout exercises (very rough approximation)
+		// Estimate calories for demo exercises (very rough approximation)
 		const exercisesCalories = exercises.reduce((sum, ex) => {
 			// Rough estimate: 3 calories per rep * weight in kg / 10
 			const repsCount = typeof ex.reps === 'string' ? parseInt(ex.reps, 10) || 1 : ex.reps || 1;
@@ -137,12 +137,12 @@
 		'Did you know that regular exercise can improve your mood and reduce stress?',
 		'Fun fact: Your bones get stronger when you challenge your muscles!',
 		'Tip: Even 15 minutes of exercise a day can make a big difference to your health.',
-		'Did you know that drinking water during your workout can boost your performance?',
+		'Did you know that drinking water during your demo can boost your performance?',
 		'Fun fact: Muscle tissue burns more calories at rest than fat tissue.',
 		'Tip: Consistency is key! Try to schedule your workouts like any other important appointment.',
 		'Did you know that sleep plays a crucial role in muscle recovery and growth?',
 		'Fun fact: Exercise can improve your sleep quality.',
-		'Tip: Don\'t forget to warm up before your workout to prevent injuries!',
+		'Tip: Don\'t forget to warm up before your demo to prevent injuries!',
 		'Did you know that varying your workouts can help prevent boredom and plateauing?'
 	];
 

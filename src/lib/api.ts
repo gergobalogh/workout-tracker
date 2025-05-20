@@ -3,8 +3,8 @@ import { userStore } from '$lib/stores/user';
 import type { Exercise } from '$lib/types';
 
 function formatDate(date: Date | string): string {
-	if (typeof date === 'string') return date;
-	return new Date(date).toISOString().split('T')[0];
+    if (typeof date === 'string') return date;
+    return new Date(date).toISOString().split('T')[0];
 }
 
 // export async function fetchExercisesForDate(date: Date | string): Promise<Exercise[]> {
@@ -71,7 +71,7 @@ function formatDate(date: Date | string): string {
 //     const u = getUser();
 //     if (!u) throw new Error('Missing user');
 //
-//     const res = await fetch(`${BACK_END_URL}/workout/workout${testMode ? '?test=true' : ''}`, {
+//     const res = await fetch(`${BACK_END_URL}/demo/demo${testMode ? '?test=true' : ''}`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({
@@ -84,34 +84,34 @@ function formatDate(date: Date | string): string {
 //     return await res.json();
 // }
 //
-// export async function critiqueWorkout(workout: string, testMode = false): Promise<any> {
+// export async function critiqueWorkout(demo: string, testMode = false): Promise<any> {
 //     const u = getUser();
 //     if (!u) throw new Error('Missing user');
 //
-//     const res = await fetch(`${BACK_END_URL}/workout/critique-workout${testMode ? '?test=true' : ''}`, {
+//     const res = await fetch(`${BACK_END_URL}/demo/critique-demo${testMode ? '?test=true' : ''}`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ goal: u.goal, workout })
+//         body: JSON.stringify({ goal: u.goal, demo })
 //     });
 //     if (!res.ok) throw new Error(`API error: ${res.status}`);
 //     return await res.json();
 // }
 //
-// export async function optimizeWorkout(workout: string, feedback: string, testMode = false): Promise<any> {
-//     const res = await fetch(`${BACK_END_URL}/workout/workout-optimization${testMode ? '?test=true' : ''}`, {
+// export async function optimizeWorkout(demo: string, feedback: string, testMode = false): Promise<any> {
+//     const res = await fetch(`${BACK_END_URL}/demo/demo-optimization${testMode ? '?test=true' : ''}`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ workout, feedback })
+//         body: JSON.stringify({ demo, feedback })
 //     });
 //     if (!res.ok) throw new Error(`API error: ${res.status}`);
 //     return await res.json();
 // }
 //
-// export async function convertWorkoutToJson(workout: string, testMode = false): Promise<any> {
-//     const res = await fetch(`${BACK_END_URL}/workout/workout-to-json${testMode ? '?test=true' : ''}`, {
+// export async function convertWorkoutToJson(demo: string, testMode = false): Promise<any> {
+//     const res = await fetch(`${BACK_END_URL}/demo/demo-to-json${testMode ? '?test=true' : ''}`, {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ workout })
+//         body: JSON.stringify({ demo })
 //     });
 //     if (!res.ok) throw new Error(`API error: ${res.status}`);
 //

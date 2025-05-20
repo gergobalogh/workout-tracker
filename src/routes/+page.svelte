@@ -8,7 +8,7 @@
 		},
 		{
 			title: "Customized Gym Workouts",
-			description: "Get tailored workout routines generated specifically for your goals and experience level, designed to maximize your results.",
+			description: "Get tailored demo routines generated specifically for your goals and experience level, designed to maximize your results.",
 			icon: "💪"
 		},
 		{
@@ -41,7 +41,7 @@
 					The smart workout tracker that helps you set goals, generate customized gym workouts, and monitor your progress - completely free.
 				</p>
 				<div class="mt-10 flex justify-center">
-					<a href="/auth/register"
+					<a href="/demo"
 						 class="w-full sm:w-auto flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-stone-500 hover:bg-stone-600 dark:bg-stone-600 dark:hover:bg-stone-700 md:py-4 md:text-lg md:px-10">
 						Get Started
 					</a>

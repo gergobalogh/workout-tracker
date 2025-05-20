@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
             return { profile: null, workouts: [] };
         }
 
-        // Fetch workout history
+        // Fetch demo history
         const { data: workouts, error: workoutsError } = await supabase
             .from('workouts')
             .select(

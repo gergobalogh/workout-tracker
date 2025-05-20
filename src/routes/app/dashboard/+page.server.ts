@@ -63,9 +63,9 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
                 progressLevels: progressLevels || []
             };
         }
-        // Get all workout IDs
+        // Get all demo IDs
         const workoutIds = workouts.map((workout) => workout.workoutid);
-        // Use Promise.all to fetch cardio and workout exercises concurrently
+        // Use Promise.all to fetch cardio and demo exercises concurrently
         const [cardioResult, workoutExercisesResult, weightResult] = await Promise.all([
             supabase.from('workoutcardio').select('*').in('workoutid', workoutIds),
             supabase.from('workoutexercises').select('*').in('workoutid', workoutIds),
@@ -79,8 +79,8 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
         }
 
         if (workoutExercisesResult.error) {
-            console.error('Error fetching workout exercises:', workoutExercisesResult.error);
-            throw new Error('Failed to load workout exercises');
+            console.error('Error fetching demo exercises:', workoutExercisesResult.error);
+            throw new Error('Failed to load demo exercises');
         }
 
         if (weightResult.error) {

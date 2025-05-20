@@ -21,11 +21,10 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             notes,
             completed
         } = data;
-        console.log(data);
-        // First, check if we need to create a new workout
+        // First, check if we need to create a new demo
         let currentWorkoutId = workoutId;
         if (!currentWorkoutId) {
-            // Create a new workout entry
+            // Create a new demo entry
             const { data: workoutData, error: workoutError } = await supabase
                 .from('workouts')
                 .insert({
@@ -37,13 +36,13 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                 .single();
 
             if (workoutError) {
-                console.error('Error creating workout:', workoutError);
-                return json({ error: 'Failed to create workout' }, { status: 500 });
+                console.error('Error creating demo:', workoutError);
+                return json({ error: 'Failed to create demo' }, { status: 500 });
             }
             currentWorkoutId = workoutData.id;
         }
 
-        // Check if this exercise already exists for this workout
+        // Check if this exercise already exists for this demo
         const { data: existingExercises, error: queryError } = await supabase
             .from('workoutexercises')
             .select('workout_exercise_id')
@@ -114,7 +113,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             exercise: result[0]
         });
     } catch (error) {
-        console.error('Server error processing workout exercise:', error);
+        console.error('Server error processing demo exercise:', error);
         return json({ error: 'Server error' }, { status: 500 });
     }
 }
