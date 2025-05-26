@@ -14,12 +14,11 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, safeGetS
             return json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        // Fetch the demo
         const { data: workout, error: workoutError } = await supabase
             .from('workouts')
             .select('*')
             .eq('id', workoutId)
-            .eq('profileid', session.user.id)
+            .eq('user_id', session.user.id)
             .single();
 
         if (workoutError) {

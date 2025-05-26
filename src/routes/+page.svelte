@@ -52,7 +52,7 @@
 					<div class="absolute inset-0 bg-gradient-to-r from-stone-400 to-stone-600 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
 					<div class="relative bg-white dark:bg-gray-800 shadow-lg sm:rounded-3xl p-8 h-96 flex items-center justify-center">
 						<!-- You can add an app screenshot here when available -->
-						<!-- <img src="/api/placeholder/400/320" alt="Workout Tracker App Screenshot" class="rounded-xl shadow-md" /> -->
+						 <img src="/img.png" alt="Workout Tracker App Screenshot" class="rounded-xl shadow-md" />
 					</div>
 				</div>
 			</div>

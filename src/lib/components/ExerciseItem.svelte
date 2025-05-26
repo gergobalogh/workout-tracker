@@ -394,13 +394,15 @@
       </span>
 		</div>
 
+
 		<!-- Weight -->
 		<div class='bg-white dark:bg-gray-600 rounded-md p-2 text-center relative'>
 			<span class='text-xs text-stone-600 dark:text-stone-400 block'>Weight</span>
 			<div class='flex items-center justify-center gap-1'>
 				<button
-					class='text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
-					on:click={() => handleWeightChange(index, (Number(exercise.weight) || 0) - 5)}
+					class='text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'
+					on:click={() => handleWeightChange(index, Math.max(0, (Number(exercise.weight) || 0) - 5))}
+					disabled={Number(exercise.weight) <= 0}
 					aria-label='Decrease weight by 5'
 				>
 					<svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'>
@@ -410,7 +412,19 @@
 
 				<input
 					type='number'
-					on:blur={(e) => handleWeightChange(index, parseFloat(e.target.value) || 0)}
+					min='0'
+					step='0.5'
+					on:blur={(e) => {
+				const value = parseFloat(e.target.value);
+				const validatedValue = isNaN(value) || value < 0 ? 0 : value;
+				handleWeightChange(index, validatedValue);
+			}}
+					on:input={(e) => {
+				// Prevent negative values during typing
+				if (parseFloat(e.target.value) < 0) {
+					e.target.value = '0';
+				}
+			}}
 					bind:value={exercise.weight}
 					class="w-12 text-center font-medium bg-transparent border-b border-stone-300 dark:border-stone-500 focus:outline-none focus:border-stone-500 dark:focus:border-stone-300"
 				/>

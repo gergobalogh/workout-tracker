@@ -4,6 +4,7 @@
 	import { tick } from 'svelte';
 	import type { DatabaseWorkout, Exercise, openExerciseNotesModalFunction, Workout } from '$lib/types';
 	import ExerciseItem from '$lib/components/ExerciseItem.svelte';
+	import FloatingTimer from '$lib/components/FloatingTimer.svelte';
 
 	export let data;
 
@@ -13,7 +14,8 @@
 	let isGenerating = false;
 	let eventSource = null;
 	let isSaving = false;
-
+	let currentRestSeconds = 0;
+	let exerciseCompleted = false;
 	// State for modal
 	let showModal = false;
 	let modalContent = '';
@@ -77,10 +79,21 @@
 		workoutStore.update(workout => {
 			if (workout.exercises && workout.exercises[index]) {
 				workout.exercises = [...workout.exercises]; // create a shallow copy
+
+				const wasCompleted = workout.exercises[index].completed;
+
 				workout.exercises[index] = {
 					...workout.exercises[index],
 					completed: !workout.exercises[index].completed
 				};
+
+				// If an exercise was just marked as completed, set rest time for next exercise
+				if (!wasCompleted && index < workout.exercises.length - 1) {
+					// Get rest time from the next exercise
+					currentRestSeconds = workout.exercises[index + 1].rest || 60;
+					// Trigger timer reset
+					exerciseCompleted = true;
+				}
 			}
 			return workout;
 		});
@@ -199,6 +212,9 @@
 	onMount(() => {
 		const unsubscribe = workoutStore.subscribe(async (newWorkout) => {
 			if (newWorkout) {
+				if (newWorkout.exercises && newWorkout.exercises.length > 0 && !currentRestSeconds) {
+					currentRestSeconds = newWorkout.exercises[0].rest || 60;
+				}
 				workout = newWorkout;
 				loadingStep = 'complete';
 				isGenerating = false;
@@ -240,7 +256,7 @@
 
 		try {
 			// Start the generation process with Server-Sent Events
-			eventSource = new EventSource('/api/demo');
+			eventSource = new EventSource('/api/workout');
 
 			eventSource.onmessage = async (event) => {
 				try {
@@ -404,6 +420,10 @@
 			{/if}
 
 			{#if workout.exercises?.length}
+				<FloatingTimer
+					restSeconds={currentRestSeconds}
+					bind:exerciseCompleted={exerciseCompleted}
+				/>
 				<div class='mb-6'>
 					<h2 class='text-xl font-bold text-stone-800 dark:text-stone-200 mb-2'>Exercises</h2>
 					<div class='space-y-4'>

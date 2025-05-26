@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { json } from '@sveltejs/kit';
 import type { Workout } from '../../../lib/types';
+import { ltc } from '../../../lib/log';
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
     try {
@@ -8,7 +9,6 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
         if (!session?.user?.id) {
             return { profile: null };
         }
-
         const userId = session.user.id;
 
         const { profile, previousWorkoutData, previousCardioData } = await loadUserData(
@@ -70,7 +70,6 @@ async function loadUserData(userId: string, supabase: any) {
         .select('*')
         .eq('user_id', userId)
         .single();
-
     if (profileError) {
         console.error('Error fetching profile:', profileError);
         throw new Error('Failed to load user profile');

@@ -101,7 +101,7 @@ export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession }
                                 const normalizedName = normalizeExerciseName(exercise.name);
 
                                 const { data: matches, error: matchError } = await supabase.rpc(
-                                    'search_exercises',
+                                    'search_workout_exercises',
                                     {
                                         query: normalizedName,
                                         uid: userId

@@ -9,12 +9,17 @@
 	$: profile = data.profile || {};
 	$: formData = form?.data ?? {};
 
-	$: username = formData.username ?? profile.username ?? '';
-	$: age = formData.age ?? profile.age ?? '';
-	$: height = formData.height ?? profile.height ?? '';
-	$: goalWeight = formData.goalWeight ?? profile.goal_weight ?? '';
-	$: goal = formData.goal ?? profile.goal ?? '';
-	$: showRestTime = formData.showRestTime ?? profile.show_rest_time ?? false;
+	// Only use form data if there are errors (validation failed)
+	// Otherwise, use the profile data (including after successful updates)
+	$: hasErrors = form?.errors && Object.keys(form.errors).length > 0;
+
+	$: username = hasErrors ? (formData.username ?? '') : (profile.username ?? '');
+	$: age = hasErrors ? (formData.age ?? '') : (profile.age ?? '');
+	$: height = hasErrors ? (formData.height ?? '') : (profile.height ?? '');
+	$: goalWeight = hasErrors ? (formData.goalWeight ?? '') : (profile.goal_weight ?? '');
+	$: goal = hasErrors ? (formData.goal ?? '') : (profile.goal ?? '');
+	$: showRestTime = hasErrors ? (formData.showRestTime ?? false) : (profile.show_rest_time ?? false);
+
 	$: error = form?.error ?? '';
 	$: message = form?.message ?? '';
 	$: success = form?.success ?? false;
@@ -61,7 +66,6 @@
 
 		<form method="POST" action="?/updateProfile" class="space-y-6" use:enhance={handleEnhance}>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<!-- Username -->
 				<div>
 					<label for="username" class="block text-sm font-medium text-stone-700 dark:text-stone-300">
 						Username
@@ -78,7 +82,6 @@
 					{/if}
 				</div>
 
-				<!-- Age -->
 				<div>
 					<label for="age" class="block text-sm font-medium text-stone-700 dark:text-stone-300">
 						Age
@@ -97,7 +100,6 @@
 					{/if}
 				</div>
 
-				<!-- Height -->
 				<div>
 					<label for="height" class="block text-sm font-medium text-stone-700 dark:text-stone-300">
 						Height (cm)
@@ -115,15 +117,14 @@
 						<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.height}</p>
 					{/if}
 				</div>
-				<!-- Goal Weight -->
+
 				<div>
 					<label for="goal-weight" class="block text-sm font-medium text-stone-700 dark:text-stone-300">
 						Goal Weight (kg)
 					</label>
 					<input
 						id="goal-weight"
-						name="goal-weight"
-						type="number"
+						name="goalWeight" type="number"
 						step="0.1"
 						min="0"
 						value={goalWeight}
@@ -134,7 +135,6 @@
 					{/if}
 				</div>
 
-				<!-- Goal -->
 				<div>
 					<label for="goal" class="block text-sm font-medium text-stone-700 dark:text-stone-300">
 						Fitness Goal
@@ -152,17 +152,13 @@
 				</div>
 			</div>
 
-			<!-- Show Rest Time Toggle -->
 			<div class="flex items-center">
-				<input type="hidden" name="show-rest-time-submitted" value="true">
-
-				<input
-					id="show-rest-time"
-					name="show-rest-time"
-					type="checkbox"
-					checked={showRestTime}
-					class="h-4 w-4 text-stone-600 dark:text-stone-500 border-gray-300 dark:border-gray-600 rounded focus:ring-stone-500 dark:focus:ring-stone-400 dark:bg-gray-700"
-				/>
+				<input type="hidden" name="showRestTimeSubmitted" value="true"> <input
+				id="show-rest-time"
+				name="showRestTime" type="checkbox"
+				checked={showRestTime}
+				class="h-4 w-4 text-stone-600 dark:text-stone-500 border-gray-300 dark:border-gray-600 rounded focus:ring-stone-500 dark:focus:ring-stone-400 dark:bg-gray-700"
+			/>
 				<label for="show-rest-time" class="ml-2 text-sm text-stone-600 dark:text-stone-400">
 					Show rest time between exercises
 				</label>

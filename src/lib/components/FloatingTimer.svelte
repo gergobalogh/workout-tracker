@@ -136,7 +136,9 @@
 		<!-- Small transparent timer display next to icon -->
 		{#if isRunning}
 			<div
-				class="absolute -left-{showRestTimeText ? '32' : '16'} top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white px-2 py-1 rounded text-sm font-mono whitespace-nowrap"
+				class="absolute top-1/2 -translate-y-1/2 bg-black bg-opacity-40 text-white px-2 py-1 rounded text-sm font-mono whitespace-nowrap"
+				class:-left-37={showRestTimeText}
+				class:-left-16={!showRestTimeText}
 				transition:fade={{ duration: 200 }}
 			>
 				<span>{showRestTimeText ? 'Rest time: ' : ''}{formattedRemainingTime}</span>
