@@ -5,12 +5,9 @@ import type { Workout } from '$lib/types';
 import { tryParseJSON } from '$lib/utils/jsonParser';
 import { normalizeExerciseName } from '$lib/utils/normalizer';
 
-export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession } }) => {
-    const session = await safeGetSession();
-    if (!session?.user?.id) {
-        return json({ error: 'Not authenticated' }, { status: 401 });
-    }
-    const userId = session.user.id;
+export const GET: RequestHandler = async ({ locals: { supabase } }) => {
+    // Single user mode - no authentication required
+    const userId = '57d01906-a126-4809-aeff-37570d7ff2c6';
 
     try {
         const { profile, previousWorkoutData, previousCardioData } = await loadUserData(
@@ -301,9 +298,17 @@ async function loadUserData(userId: string, supabase: any) {
         .eq('user_id', userId)
         .single();
 
-    if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        throw new Error('Failed to load user profile');
+    // If no profile found (e.g., in demo mode), use default profile
+    let userProfile = profile;
+    if (profileError || !profile) {
+        console.log('No profile found, using default profile for demo/single-user mode');
+        userProfile = {
+            user_id: userId,
+            goal: 'General fitness and strength building',
+            fitness_level: 'intermediate',
+            available_equipment: 'gym equipment',
+            workout_frequency: 3
+        };
     }
 
     // Fetch workouts from the last 7 days
@@ -322,7 +327,7 @@ async function loadUserData(userId: string, supabase: any) {
     }
     if (!workouts || workouts.length === 0) {
         return {
-            profile,
+            profile: userProfile,
             previousWorkoutData: '',
             previousCardioData: ''
         };
@@ -371,7 +376,7 @@ async function loadUserData(userId: string, supabase: any) {
         })
         .join('\n');
     return {
-        profile,
+        profile: userProfile,
         previousWorkoutData: formattedGroupedData,
         previousCardioData: formattedCardioDisplayData
     };

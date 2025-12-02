@@ -17,15 +17,14 @@
 		progressLevels = []
 	} = data;
 
-	let username = profile?.username || 'Athlete';
+	const goalWeight = profile?.goal_weight || null;
 
 	// Calculate demo stats
 	const totalWorkouts = workouts.length;
 	const totalCardioSessions = cardio.length;
 
-	// Calculate total duration and calories (placeholder values since these aren't in your schema)
-	// In a real implementation, you might calculate these from your exercise data
-	const totalDuration = calculateTotalDuration(workoutExercises,);
+	// Calculate total duration and calories
+	const totalDuration = calculateTotalDuration(workoutExercises);
 	const caloriesBurned = calculateTotalCalories(workoutExercises);
 
 	// Group workouts by day for the chart
@@ -38,15 +37,15 @@
 	let animatedCaloriesBurned = 0;
 
 	// Progress tracking
-	let currentLevel = progressLevels.find(level => level.level_id === profile?.monthly_progress_level) || null;
-	let nextLevel = progressLevels.find(level => level.level_id === (profile?.monthly_progress_level + 1)) || null;
+	const currentLevel = progressLevels.find(level => level.level_id === profile?.monthly_progress_level) || null;
+	const nextLevel = progressLevels.find(level => level.level_id === (profile?.monthly_progress_level || 0) + 1) || null;
 
-	let goalName = currentLevel?.level_name || 'Beginner';
-	let nextGoalName = nextLevel?.level_name || 'Intermediate';
+	const goalName = currentLevel?.level_name || 'Getting Started';
+	const nextGoalName = nextLevel?.level_name || null;
 
-	let monthlyWorkoutGoal = currentLevel?.workouts_required || 10;
-	let monthlyDurationGoal = currentLevel?.minutes_required || 300;
-	let monthlyCaloriesGoal = currentLevel?.calories_required || 1500;
+	const monthlyWorkoutGoal = currentLevel?.workouts_required || 4;
+	const monthlyDurationGoal = currentLevel?.minutes_required || 60;
+	const monthlyCaloriesGoal = currentLevel?.calories_required || 500;
 
 	function calculateTotalDuration(exercises: Exercise[]): number {
 		// For demo exercises, assume duration based on sets (e.g., 2 minutes per set)
@@ -149,7 +148,6 @@
 	let currentFact = fitnessFacts[Math.floor(Math.random() * fitnessFacts.length)];
 	let chartElement: HTMLCanvasElement;
 	let weightChartElement: HTMLCanvasElement;
-	const goalWeight = profile?.goal_weight || null;
 
 
 	onMount(() => {
@@ -178,9 +176,9 @@
 						},
 						y: {
 							beginAtZero: true,
+							suggestedMax: 5,
 							title: {
-								display: true,
-								text: 'Workouts'
+								display: false
 							},
 							ticks: {
 								stepSize: 1,
@@ -292,8 +290,8 @@
 <div class='container mx-auto px-4 py-8'>
 	<div class='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
 		<div>
-			<h1 class='text-3xl font-bold text-stone-800 dark:text-white'>Welcome back, {username}</h1>
-			<p class='text-stone-600 dark:text-stone-300 mt-1'>Here's your workout summary for the last 7 days</p>
+			<h1 class='text-3xl font-bold text-stone-800 dark:text-white'>Dashboard</h1>
+			<p class='text-stone-600 dark:text-stone-300 mt-1'>Your workout summary for the last 30 days</p>
 		</div>
 
 		<button
@@ -563,63 +561,62 @@
 		</div>
 	</div>
 
-	<!-- Progress Tracker -->
-	{#if profile && progressLevels.length > 0}
+	<!-- Monthly Progress -->
+	{#if progressLevels.length > 0}
 		<div class='bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-8'>
-			<h2 class='text-xl font-bold text-stone-800 dark:text-white mb-1 cursor-default'>
+			<h2 class='text-xl font-bold text-stone-800 dark:text-white mb-1'>
 				Monthly Progress
 			</h2>
-			<p class='text-sm text-stone-600 dark:text-stone-300 mb-4 cursor-default'>
-				Current Level: {goalName}
+			<p class='text-sm text-stone-600 dark:text-stone-300 mb-4'>
+				Current Level: <span class='font-semibold'>{goalName}</span>
 			</p>
 
-			<div class='grid grid-cols-1 md:grid-cols-3 gap-4'>
+			<div class='grid grid-cols-1 md:grid-cols-3 gap-6'>
 				<!-- Workouts -->
-				<div class='text-center cursor-default transition-transform duration-200 hover:scale-105'>
-					<p class='text-stone-600 dark:text-stone-300'>Workouts</p>
+				<div class='text-center'>
+					<p class='text-stone-600 dark:text-stone-300 text-sm mb-1'>Workouts</p>
 					<p class='text-2xl font-bold text-stone-800 dark:text-white'>
 						{totalWorkouts} / {monthlyWorkoutGoal}
 					</p>
-					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2'>
 						<div
-							class='bg-yellow-200 h-2.5 rounded-full'
+							class='bg-yellow-400 h-2.5 rounded-full transition-all duration-500'
 							style='width: {Math.min((totalWorkouts / monthlyWorkoutGoal) * 100, 100)}%'>
 						</div>
 					</div>
 				</div>
 
 				<!-- Duration -->
-				<div class='text-center cursor-default transition-transform duration-200 hover:scale-105'>
-					<p class='text-stone-600 dark:text-stone-300'>Duration (mins)</p>
+				<div class='text-center'>
+					<p class='text-stone-600 dark:text-stone-300 text-sm mb-1'>Duration (mins)</p>
 					<p class='text-2xl font-bold text-stone-800 dark:text-white'>
 						{totalDuration} / {monthlyDurationGoal}
 					</p>
-					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2'>
 						<div
-							class='bg-green-500/50 h-2.5 rounded-full'
+							class='bg-green-500 h-2.5 rounded-full transition-all duration-500'
 							style='width: {Math.min((totalDuration / monthlyDurationGoal) * 100, 100)}%'>
 						</div>
 					</div>
 				</div>
 
 				<!-- Calories Burned -->
-				<div class='text-center cursor-default transition-transform duration-200 hover:scale-105'>
-					<p class='text-stone-600 dark:text-stone-300'>Calories Burned (kcal)</p>
+				<div class='text-center'>
+					<p class='text-stone-600 dark:text-stone-300 text-sm mb-1'>Calories Burned</p>
 					<p class='text-2xl font-bold text-stone-800 dark:text-white'>
 						{caloriesBurned} / {monthlyCaloriesGoal}
 					</p>
-					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+					<div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2'>
 						<div
-							class='bg-red-500/50 h-2.5 rounded-full'
+							class='bg-red-500 h-2.5 rounded-full transition-all duration-500'
 							style='width: {Math.min((caloriesBurned / monthlyCaloriesGoal) * 100, 100)}%'>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Next Level -->
 			{#if nextGoalName}
-				<p class='mt-6 text-sm text-stone-600 dark:text-stone-300 text-center cursor-default'>
+				<p class='mt-6 text-sm text-stone-600 dark:text-stone-300 text-center'>
 					Next Level: <span class='font-semibold text-stone-800 dark:text-white'>{nextGoalName}</span>
 				</p>
 			{/if}

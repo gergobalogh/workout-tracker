@@ -1,13 +1,7 @@
 import { json } from '@sveltejs/kit';
 
-export async function POST({ request, locals: { supabase, safeGetSession } }) {
+export async function POST({ request, locals: { supabase } }) {
     try {
-        // Get the session from locals
-        const session = await safeGetSession();
-        if (!session || !session.user) {
-            return json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         // Parse the request body
         const data = await request.json();
         const {
@@ -21,34 +15,34 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             notes,
             completed
         } = data;
-        // First, check if we need to create a new demo
+
+        // First, check if we need to create a new workout
         let currentWorkoutId = workoutId;
         if (!currentWorkoutId) {
-            // Create a new demo entry
+            // Create a new workout entry
             const { data: workoutData, error: workoutError } = await supabase
                 .from('workouts')
                 .insert({
-                    user_id: session.user.id,
                     workout_name: workout_name,
+                    workout_date: new Date().toISOString().split('T')[0],
                     created_at: new Date().toISOString()
                 })
                 .select('id')
                 .single();
 
             if (workoutError) {
-                console.error('Error creating demo:', workoutError);
-                return json({ error: 'Failed to create demo' }, { status: 500 });
+                console.error('Error creating workout:', workoutError);
+                return json({ error: 'Failed to create workout' }, { status: 500 });
             }
             currentWorkoutId = workoutData.id;
         }
 
-        // Check if this exercise already exists for this demo
+        // Check if this exercise already exists for this workout
         const { data: existingExercises, error: queryError } = await supabase
             .from('workoutexercises')
             .select('workout_exercise_id')
             .eq('workoutid', currentWorkoutId)
-            .eq('exercise_name', exercise_name)
-            .eq('user_id', session.user.id);
+            .eq('exercise_name', exercise_name);
 
         if (queryError) {
             console.error('Error querying for existing exercise:', queryError);
@@ -66,7 +60,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                 notes,
                 completed,
                 normalized_name,
-                completed_at: new Date().toISOString()
+                completed_at: completed ? new Date().toISOString() : null
             };
 
             const { data: updateResult, error: updateError } = await supabase
@@ -87,7 +81,6 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
                 .from('workoutexercises')
                 .insert({
                     workoutid: currentWorkoutId,
-                    user_id: session.user.id,
                     exercise_name,
                     normalized_name,
                     sets,
@@ -113,7 +106,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
             exercise: result[0]
         });
     } catch (error) {
-        console.error('Server error processing demo exercise:', error);
+        console.error('Server error processing workout exercise:', error);
         return json({ error: 'Server error' }, { status: 500 });
     }
 }

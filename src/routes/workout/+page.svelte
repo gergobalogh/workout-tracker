@@ -8,7 +8,7 @@
 
 	export let data;
 
-	let loadingStep: string = '';
+	let loadingStep: string = null;
 	let workout: Workout = null;
 	let error = null;
 	let isGenerating = false;
@@ -32,28 +32,21 @@
 		}
 	};
 
-	function getFitnessLevel() {
-		const radioButtons = document.getElementsByName('fitnessLevel');
-		for (const radioButton of radioButtons) {
-			if (radioButton.checked) {
-				return radioButton.value;
-			}
-		}
-		return 'beginner'; // Default to beginner if somehow nothing is selected
-	}
 
 	function getLoadingMessage(step: string) {
 		switch (step) {
-			case 'starting':
-				return 'Lacing up your workout shoes...';
-			case 'planning':
-				return 'Taking a deep breath before we begin...';
-			case 'finalizing':
-				return "You've got this! Let's crush it today..."
+			case 'generate':
+				return 'Generating your workout...';
+			case 'critique':
+				return 'Evaluating demo effectiveness...';
+			case 'json_conversion':
+				return 'Formatting demo details...';
+			case 'adding_weights':
+				return 'Adding your previous weights...';
 			case 'complete':
 				return 'Workout generation complete!';
 			case 'error':
-				return 'Error generating workout';
+				return 'Error generating demo';
 			default:
 				return 'Processing...';
 		}
@@ -87,11 +80,11 @@
 			if (workout.exercises && workout.exercises[index]) {
 				workout.exercises = [...workout.exercises]; // create a shallow copy
 
-				// Toggle completion status
 				const wasCompleted = workout.exercises[index].completed;
+
 				workout.exercises[index] = {
 					...workout.exercises[index],
-					completed: !wasCompleted
+					completed: !workout.exercises[index].completed
 				};
 
 				// If an exercise was just marked as completed, set rest time for next exercise
@@ -110,7 +103,7 @@
 		if (currentExerciseIndex >= 0 && workout && workout.exercises) {
 			workoutStore.update(workout => {
 				if (workout.exercises && workout.exercises[currentExerciseIndex]) {
-					workout.exercises[currentExerciseIndex].note = exerciseNotes;
+					workout.exercises[currentExerciseIndex].note = exerciseNotes
 					workout.exercises = [...workout.exercises]; // create a shallow copy
 					workout.exercises[currentExerciseIndex] = {
 						...workout.exercises[currentExerciseIndex],
@@ -140,47 +133,123 @@
 
 	// Function to save cardio changes to the server
 	const saveCardioChanges = async () => {
+		if (!workout) return;
+		if(!workout.cardio) return;
+		let cardio = workout.cardio
+		isSaving = true;
+		try {
+			const response = await fetch('/api/workout/cardio', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					workoutId: workout.id,
+					type: cardio.type,
+					distance: cardio.distance,
+					description: cardio.description || '',
+					completed: cardio.completed || false,
+					workout_name: workout.workout_name
+				})
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to save cardio changes');
+			}
+
+			const result: DatabaseWorkout = await response.json();
+
+			// If this is the first save and we got a workoutId back, save it to the demo
+			if (!workout.id && result.id) {
+				workout.id = result.id;
+			}
+
+		} catch (err) {
+			console.error('Error saving cardio:', err);
+			error = 'Failed to save cardio changes. Please try again.';
+		} finally {
+			isSaving = false;
+		}
 	};
 	const saveWorkoutExercise = async (
-		exercise: Exercise
+		exercise: Exercise,
 	) => {
+		try {
+			const response = await fetch('/api/workout/exercise', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					workoutId: workout.id,
+					exercise_name: exercise.name,
+					sets: exercise.sets,
+					reps: exercise.reps,
+					weight: exercise.weight || 0,
+					notes: exercise.note || exercise.instructions,
+					completed: exercise.completed,
+					normalized_name: exercise.normalized_name,
+					workout_name: workout.workout_name
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to save exercise');
+			}
+
+			const data = await response.json();
+
+			workoutStore.update(current => ({
+				...current,
+				id: data.workoutId
+			}));
+		} catch (error) {
+			console.error('Error saving demo exercise:', error);
+			throw error;
+		}
 	};
 	onMount(() => {
+		// Check if there's an incomplete workout to load
+		if (data.incompleteWorkout) {
+			workoutStore.set(data.incompleteWorkout);
+		}
+
 		const unsubscribe = workoutStore.subscribe(async (newWorkout) => {
 			if (newWorkout) {
-				// Check if the workout has actual content (exercises or a name)
-				if ((newWorkout.exercises && newWorkout.exercises.length > 0) || newWorkout.workout_name) {
-					if (newWorkout.exercises && newWorkout.exercises.length > 0 && !currentRestSeconds) {
-						currentRestSeconds = newWorkout.exercises[0].rest || 60;
-					}
-					workout = newWorkout;
-					loadingStep = 'complete';
-					isGenerating = false;
-					isSaving = false;
-					error = null;
-				} else {
-					// If the workout is empty, treat it as no workout
-					workout = null;
-					loadingStep = '';
+				if (newWorkout.exercises && newWorkout.exercises.length > 0 && !currentRestSeconds) {
+					currentRestSeconds = newWorkout.exercises[0].rest || 60;
 				}
+				workout = newWorkout;
+				loadingStep = 'complete';
+				isGenerating = false;
+				isSaving = false;
+				error = null;
 			} else {
-				// No workout in the store
-				workout = null;
-				loadingStep = '';
+				workout = {
+					workout_name: '',
+					warm_up: '',
+					exercises: [],
+					cardio: {
+						type: '',
+						distance: 0,
+						description: '',
+						completed: false
+					},
+					cool_down: '',
+				};
+				loadingStep = 'starting';
 			}
 		});
-
 		return () => {
+			unsubscribe();
 			if (eventSource) {
 				eventSource.close();
 			}
-			unsubscribe();
 		};
 	});
 
-
-
-	async function generateWorkout(workoutType = 'default') {
+	async function generateWorkout() {
 		// Close any existing connection
 		if (eventSource) {
 			eventSource.close();
@@ -190,12 +259,10 @@
 		loadingStep = 'starting';
 		error = null;
 		workout = null;
-		workoutStore.set(null);
 
 		try {
-			let level = getFitnessLevel()
 			// Start the generation process with Server-Sent Events
-			eventSource = new EventSource(`/api/workout/demo?type=${workoutType}&level=${level}`);
+			eventSource = new EventSource('/api/workout');
 
 			eventSource.onmessage = async (event) => {
 				try {
@@ -224,7 +291,7 @@
 								if (!exercise.hasOwnProperty('completed')) {
 									exercise.completed = false;
 								}
-								if (!exercise.weight) exercise.weight = 0;
+								if(!exercise.weight) exercise.weight = 0;
 							});
 						}
 						// Initialize completed field for cardio if not present
@@ -259,115 +326,31 @@
 </svelte:head>
 
 <div class='max-w-3xl mx-auto'>
-	{#if !isGenerating && !workout}
-		<div class='min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-			<div class='max-w-md w-full space-y-6 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md'>
-				<h1 class="text-3xl font-bold text-stone-800 dark:text-stone-100 text-center">Get Moving Today!</h1>
-				<!-- Fitness Level Selection (Moved up) -->
-				<div class="mb-6">
-					<p class="text-stone-600 dark:text-stone-300 mb-3 text-base font-medium">Select your fitness level:</p>
-					<div class="flex flex-col gap-3">
-						<label class="cursor-pointer">
-							<input
-								type="radio"
-								name="fitnessLevel"
-								value="beginner"
-								checked
-								class="hidden"
-							/>
-							<span class="block text-center py-3 px-4 rounded-lg border-2 border-stone-400 dark:border-gray-600 text-stone-700 dark:text-stone-300 bg-white dark:bg-gray-700 transition-all duration-200 hover:bg-stone-100 dark:hover:bg-gray-600 checked:border-stone-600 dark:checked:border-stone-500 checked:bg-stone-100 dark:checked:bg-gray-600">
-                        New to Fitness
-                    </span>
-						</label>
-						<label class="cursor-pointer">
-							<input
-								type="radio"
-								name="fitnessLevel"
-								value="intermediate"
-								class="hidden"
-							/>
-							<span class="block text-center py-3 px-4 rounded-lg border-2 border-stone-400 dark:border-gray-600 text-stone-700 dark:text-stone-300 bg-white dark:bg-gray-700 transition-all duration-200 hover:bg-stone-100 dark:hover:bg-gray-600 checked:border-stone-600 dark:checked:border-stone-500 checked:bg-stone-100 dark:checked:bg-gray-600">
-                        Active Mover
-                    </span>
-						</label>
-						<label class="cursor-pointer">
-							<input
-								type="radio"
-								name="fitnessLevel"
-								value="advanced"
-								class="hidden"
-							/>
-							<span class="block text-center py-3 px-4 rounded-lg border-2 border-stone-400 dark:border-gray-600 text-stone-700 dark:text-stone-300 bg-white dark:bg-gray-700 transition-all duration-200 hover:bg-stone-100 dark:hover:bg-gray-600 checked:border-stone-600 dark:checked:border-stone-500 checked:bg-stone-100 dark:checked:bg-gray-600">
-                        Pro Athlete
-                    </span>
-						</label>
-					</div>
-				</div>
+	<!-- Profile section -->
+	{#if data.profile}
+		<div class='bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6'>
+			<h1 class='text-3xl font-extrabold text-stone-950 dark:text-white mb-2'>Hello, {data.profile.username || 'there'}
+				!</h1>
+			<p class='text-stone-700 dark:text-stone-300 mb-6'>
+				Your goal: <span class='font-medium'>{data.profile.goal || 'General fitness'}</span>
+			</p>
 
-				<!-- Workout Type Buttons -->
-				<div class="flex flex-col gap-4 mb-6">
-					<p class="text-stone-600 dark:text-stone-300 mb-6 text-lg text-center">Choose your free personalized workout:</p>
-
-					<button
-						on:click={() => generateWorkout('strength')}
-						class="flex items-center justify-center py-4 px-4 bg-stone-700 hover:bg-stone-800 text-stone-100 rounded-lg font-semibold text-lg transition-all hover:scale-105"
-					>
-						<svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M6 6v12m12-12v12m-7-9h-2m0 6h2"></path>
-						</svg>
-						Strength
-					</button>
-					<button
-						on:click={() => generateWorkout('cardio')}
-						class="flex items-center justify-center py-4 px-4 bg-stone-600 hover:bg-stone-700 text-stone-100 rounded-lg font-semibold text-lg transition-all hover:scale-105"
-					>
-						<svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-						</svg>
-						Cardio
-					</button>
-					<button
-						on:click={() => generateWorkout('hiit')}
-						class="flex items-center justify-center py-4 px-4 bg-stone-500 hover:bg-stone-600 text-stone-100 rounded-lg font-semibold text-lg transition-all hover:scale-105"
-					>
-						<svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-						</svg>
-						HIIT
-					</button>
-				</div>
-
-				<!-- Custom Workout Input (Moved up and improved) -->
-				<div class="flex flex-col gap-3">
-					<p class="text-stone-600 dark:text-stone-300 mb-2 text-base font-medium">Or describe your fitness goal:</p>
-					<div class="flex gap-2">
-						<input
-							type="text"
-							id="customWorkout"
-							class="flex-grow px-4 py-3 border dark:border-gray-700 rounded-md bg-white dark:bg-gray-700 text-stone-900 dark:text-white text-base"
-							placeholder="'Lose weight', 'Build muscle', 'Improve endurance'"
-						/>
-						<button
-							on:click={() => generateWorkout(document.getElementById('customWorkout').value)}
-							class="bg-stone-600 hover:bg-stone-700 text-white px-4 py-3 rounded-lg font-medium text-base whitespace-nowrap"
-						>
-							Go
-						</button>
-					</div>
-				</div>
-			</div>
+			{#if !isGenerating && !workout}
+				<button
+					on:click={generateWorkout}
+					class='w-full py-3 px-4 bg-stone-600 hover:bg-stone-700 text-white rounded-md font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors'
+				>
+					Generate New Workout
+				</button>
+			{/if}
 		</div>
-
-		<style>
-        input[type="radio"]:checked + span {
-            border-color: #57534e;
-            background-color: #f5f5f4;
-        }
-        .dark input[type="radio"]:checked + span {
-            border-color: #71717a;
-            background-color: #4b5563;
-        }
-		</style>	{/if}
+	{:else}
+		<div class='bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 text-center'>
+			<p class='text-stone-700 dark:text-stone-300'>
+				Please sign in to generate workouts.
+			</p>
+		</div>
+	{/if}
 
 	<!-- Loading state -->
 	{#if isGenerating}
@@ -380,13 +363,14 @@
 				<h2 class='text-xl font-bold text-stone-800 dark:text-stone-200 mb-2 text-center'>
 					{getLoadingMessage(loadingStep)}
 				</h2>
+
 				<!-- Progress steps visualization -->
 				<div class='mt-6 w-full max-w-md'>
-					{#each ['starting', 'planning', 'finalizing', 'complete'] as step, i}
+					{#each ['starting', 'generate', 'critique', 'optimize', 'json_conversion', 'adding_weights', 'complete'] as step, i}
 						<div class='flex items-center mb-2'>
 							<div class={`flex items-center justify-center h-8 w-8 rounded-full
-                ${loadingStep === step ? 'bg-stone-500 text-white' :
-                ['starting', 'planning', 'finalizing', 'complete'].indexOf(loadingStep) > ['starting', 'planning', 'finalizing', 'complete'].indexOf(step) ? 'bg-green-500 text-white' : 'bg-stone-300 text-stone-700'}`}>
+                                    ${loadingStep === step ? 'bg-stone-500 text-white' :
+                                    ['generate', 'critique', 'optimize', 'json_conversion', 'adding_weights', 'complete'].indexOf(loadingStep) > ['generate', 'critique', 'optimize', 'json_conversion', 'adding_weights', 'complete'].indexOf(step) ? 'bg-green-500 text-white' : 'bg-stone-300 text-stone-700'}`}>
 								{i + 1}
 							</div>
 							<div class='ml-4 text-stone-800 dark:text-stone-200 capitalize'>
@@ -411,6 +395,17 @@
 			>
 				Try Again
 			</button>
+		</div>
+	{/if}
+
+	<!-- Saving indicator -->
+	{#if isSaving}
+		<div
+			class='fixed top-4 right-4 bg-green-100 dark:bg-green-900 border border-green-400 text-green-700 dark:text-green-200 px-4 py-2 rounded shadow-md'>
+			<div class='flex items-center'>
+				<div class='animate-spin rounded-full h-4 w-4 border-b-2 border-green-500 mr-2'></div>
+				<span>Saving changes...</span>
+			</div>
 		</div>
 	{/if}
 
@@ -446,52 +441,52 @@
 								{handleWeightChange}
 								{saveWorkoutExercise}
 								index={i}
-								showRestTime={true}
+								showRestTime={data.profile.show_rest_time}
+
 							/>
 						{/each}
 					</div>
 				</div>
-				<FloatingTimer/>
 			{/if}
 
 
-			<!--{#if demo.cardio}-->
-			<!--	<div class='mb-6'>-->
-			<!--		<h2 class='text-xl font-bold text-stone-800 dark:text-stone-200 mb-2'>Cardio</h2>-->
-			<!--		<div-->
-			<!--			class={`bg-stone-100 dark:bg-gray-700 p-4 rounded-md ${demo.cardio.completed ? 'border-l-4 border-green-500' : ''}`}>-->
-			<!--			<div class='flex items-center mb-2'>-->
-			<!--				<input-->
-			<!--					type='checkbox'-->
-			<!--					id='cardio-completed'-->
-			<!--					class='h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400'-->
-			<!--					checked={demo.cardio.completed || false}-->
-			<!--					on:change={toggleCardioCompleted}-->
-			<!--				/>-->
-			<!--				<h3-->
-			<!--					class='font-semibold text-stone-800 dark:text-stone-200 ml-2'>-->
-			<!--					{demo.cardio.type}-->
-			<!--				</h3>-->
-			<!--			</div>-->
-			<!--			<div class='mt-2 flex flex-wrap -mx-1'>-->
-			<!--				<div class='w-1/2 px-1 mb-2'>-->
-			<!--					<div class='bg-white dark:bg-gray-600 p-2 rounded h-full'>-->
-			<!--						<span class='font-medium text-stone-600 dark:text-stone-300'>Distance:</span>-->
-			<!--						<span class='text-stone-800 dark:text-white ml-1'>{demo.cardio.distance} km</span>-->
-			<!--					</div>-->
-			<!--				</div>-->
-			<!--				<div class='w-1/2 px-1 mb-2'>-->
+			{#if workout.cardio}
+				<div class='mb-6'>
+					<h2 class='text-xl font-bold text-stone-800 dark:text-stone-200 mb-2'>Cardio</h2>
+					<div
+						class={`bg-stone-100 dark:bg-gray-700 p-4 rounded-md ${workout.cardio.completed ? 'border-l-4 border-green-500' : ''}`}>
+						<div class='flex items-center mb-2'>
+							<input
+								type='checkbox'
+								id='cardio-completed'
+								class='h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400'
+								checked={workout.cardio.completed || false}
+								on:change={toggleCardioCompleted}
+							/>
+							<h3
+								class="font-semibold text-stone-800 dark:text-stone-200 ml-2">
+								{workout.cardio.type}
+							</h3>
+						</div>
+						<div class='mt-2 flex flex-wrap -mx-1'>
+							<div class='w-1/2 px-1 mb-2'>
+								<div class='bg-white dark:bg-gray-600 p-2 rounded h-full'>
+									<span class='font-medium text-stone-600 dark:text-stone-300'>Distance:</span>
+									<span class='text-stone-800 dark:text-white ml-1'>{workout.cardio.distance} km</span>
+								</div>
+							</div>
+							<div class='w-1/2 px-1 mb-2'>
 
-			<!--				</div>-->
-			<!--			</div>-->
-			<!--			{#if demo.cardio.description}-->
-			<!--				<div class='bg-white dark:bg-gray-600 p-2 rounded mt-2'>-->
-			<!--					<p class='text-stone-700 dark:text-stone-300 text-sm mt-1'>{demo.cardio.description}</p>-->
-			<!--				</div>-->
-			<!--			{/if}-->
-			<!--		</div>-->
-			<!--	</div>-->
-			<!--{/if}-->
+							</div>
+						</div>
+						{#if workout.cardio.description}
+							<div class='bg-white dark:bg-gray-600 p-2 rounded mt-2'>
+								<p class='text-stone-700 dark:text-stone-300 text-sm mt-1'>{workout.cardio.description}</p>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
 
 			{#if workout.cool_down}
 				<div class='mb-6'>
@@ -501,38 +496,26 @@
 					</div>
 				</div>
 			{/if}
-			{#if !workout.exercises}
-			<!-- Generate New Workout buttons when demo is displayed -->
-			<div class='mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
+
+			<!-- Generate New Workout button when demo is displayed -->
+			<div class='mt-6'>
 				<button
-					on:click={() => generateWorkout('strength')}
+					on:click={generateWorkout}
 					class='w-full py-3 px-4 bg-stone-600 hover:bg-stone-700 text-white rounded-md font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors'
 				>
-					New Strength Workout
+					Generate New Workout
 				</button>
-				<button
-					on:click={() => generateWorkout('cardio')}
-					class='w-full py-3 px-4 bg-stone-600 hover:bg-stone-700 text-white rounded-md font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors'
-				>
-					New Cardio Workout
-				</button>
-				<button
-					on:click={() => generateWorkout('hiit')}
-					class='w-full py-3 px-4 bg-stone-600 hover:bg-stone-700 text-white rounded-md font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors'
-				>
-					New HIIT Workout
-				</button>
-			</div>
-				{/if}
-			<!-- Create account CTA -->
-			<div class='mt-8 text-center'>
-				<a href='/auth/register'
-					 class='py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors inline-block'>
-					Create an account to save progress
-				</a>
 			</div>
 		</div>
 	{/if}
+
+	<!-- Dashboard Button -->
+	<div class='text-center'>
+		<a href='/dashboard'
+			 class='inline-block py-2 px-4 text-white bg-stone-500 hover:bg-stone-600 dark:bg-stone-600 dark:hover:bg-stone-700 rounded-md'>
+			Dashboard
+		</a>
+	</div>
 </div>
 
 <!-- Modal for notes -->

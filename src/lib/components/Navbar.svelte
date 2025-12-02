@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { safeLocalStorageGet } from '../utils/localStorage';
 	const { user } = $props<{ user: boolean }>();
 	let isMenuOpen = $state(false);
 	let isDarkMode = $state(false);
@@ -28,21 +27,17 @@
 		if (browser) {
 			if (isDarkMode) {
 				document.documentElement.classList.add('dark');
-				localStorage.setItem('theme', 'dark');
 			} else {
 				document.documentElement.classList.remove('dark');
-				localStorage.setItem('theme', 'light');
 			}
 		}
 	};
 
-	// Check for saved theme preference on mount
+	// Check for system theme preference on mount
 	onMount(() => {
-		// Check local storage or system preference
-		const savedTheme = safeLocalStorageGet('theme');
+		// Check system preference only
 		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-		isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
+		isDarkMode = prefersDark;
 
 		if (isDarkMode) {
 			document.documentElement.classList.add('dark');
@@ -57,22 +52,6 @@
 			currentPath = page.url.pathname;
 		}
 	});
-	async function handleLogout() {
-		try {
-			const response = await fetch('/auth/logout', {
-				method: 'POST'
-			});
-			const result = await response.json();
-
-			if (result.success) {
-				window.location.href = '/';
-			} else {
-				console.error('Logout failed:', result.message);
-			}
-		} catch (err) {
-			console.error('Error logging out:', err);
-		}
-	}
 </script>
 <nav class='bg-white dark:bg-gray-800 shadow-md'>
 	<div class='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -89,7 +68,7 @@
 
 					{#if user}
 						<a
-							href='/app/dashboard'
+							href='/dashboard'
 							class="{page.url.pathname.startsWith('/dashboard') ?
 			'border-stone-500 text-stone-950 dark:text-white' :
 			'border-transparent text-stone-600 dark:text-gray-300 hover:text-stone-700 dark:hover:text-white'}
@@ -98,8 +77,8 @@
 							Dashboard
 						</a>
 						<a
-							href='/app/workout'
-							class="{page.url.pathname.startsWith('/app/workout') ?
+							href='/workout'
+							class="{page.url.pathname.startsWith('/workout') ?
 			'border-stone-500 text-stone-950 dark:text-white' :
 			'border-transparent text-stone-600 dark:text-gray-300 hover:text-stone-700 dark:hover:text-white'}
 			inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -143,43 +122,6 @@
 						</svg>
 					{/if}
 				</button>
-
-				<!-- Authentication Links -->
-				{#if user}
-					<a
-						href='/app/profile'
-						class="{page.url.pathname.startsWith('/profile') ?
-           'bg-stone-50 dark:bg-gray-700 border-stone-500 text-stone-700 dark:text-white' :
-           'border-transparent text-stone-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-700 dark:hover:text-white'}
-           px-3 py-2 rounded-md text-sm font-medium"
-					>
-						<div class="flex items-center">
-							<div class="relative w-8 h-8 mr-2 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
-								<svg class="absolute w-10 h-10 text-gray-400 -left-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-							</div>
-							Profile
-						</div>
-					</a>
-					<button
-						on:click={handleLogout}
-						class='bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800'
-					>
-						Logout
-					</button>
-				{:else }
-					<a
-						href='/auth/login'
-						class='text-stone-600 dark:text-stone-400 hover:text-stone-500 dark:hover:text-stone-300 px-3 py-2 rounded-md text-sm font-medium'
-					>
-						Login
-					</a>
-					<a
-						href='/auth/register'
-						class='bg-stone-500 hover:bg-stone-600 dark:bg-stone-600 dark:hover:bg-stone-700 text-white px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 dark:focus:ring-offset-gray-800'
-					>
-						Register
-					</a>
-				{/if}
 			</div>
 
 			<!-- Mobile menu button -->
@@ -258,7 +200,7 @@
 				</a>
 				{#if user}
 					<a
-						href='/app/dashboard'
+						href='/dashboard'
 						class="{page.url.pathname.startsWith('/dashboard') ?
 			'bg-stone-50 dark:bg-gray-700 border-stone-500 text-stone-700 dark:text-white' :
 			'border-transparent text-stone-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-700 dark:hover:text-white'}
@@ -267,50 +209,13 @@
 						Dashboard
 					</a>
 					<a
-						href='/app/workout'
-						class="{page.url.pathname.startsWith('/app/workout') ?
+						href='/workout'
+						class="{page.url.pathname.startsWith('/workout') ?
 			'bg-stone-50 dark:bg-gray-700 border-stone-500 text-stone-700 dark:text-white' :
 			'border-transparent text-stone-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-700 dark:hover:text-white'}
 			block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
 					>
 						Workout
-					</a>
-				{/if}
-
-				<!-- Authentication Links -->
-				{#if user}
-					<a
-						href='/app/profile'
-						class="{page.url.pathname.startsWith('/profile') ?
-           'bg-stone-50 dark:bg-gray-700 border-stone-500 text-stone-700 dark:text-white' :
-           'border-transparent text-stone-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-700 dark:hover:text-white'}
-           block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-					>
-						<div class="flex items-center">
-							<div class="relative w-8 h-8 mr-2 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
-								<svg class="absolute w-10 h-10 text-gray-400 -left-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-							</div>
-							Profile
-						</div>
-					</a>
-					<button
-						on:click={handleLogout}
-						class='border-transparent text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
-					>
-						Logout
-					</button>
-				{:else }
-					<a
-						href='/auth/login'
-						class='border-transparent text-stone-600 dark:text-stone-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-700 dark:hover:text-white block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
-					>
-						Login
-					</a>
-					<a
-						href='/auth/register'
-						class='border-transparent text-stone-600 dark:text-stone-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-stone-500 dark:hover:text-stone-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium'
-					>
-						Register
 					</a>
 				{/if}
 			</div>

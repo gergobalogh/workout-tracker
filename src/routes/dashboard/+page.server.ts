@@ -1,19 +1,20 @@
 import type { PageServerLoad } from './$types';
-import { ltc } from '../../../lib/log';
+
+// Single user mode - hardcoded user ID (matches API routes)
+const SINGLE_USER_ID = '57d01906-a126-4809-aeff-37570d7ff2c6';
+
 //@TODO peak performance days
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
     try {
-        // Get user session
+        // Get user session or use single-user mode
         const session = await safeGetSession();
-        if (!session?.user?.id) {
-            return { profile: null };
-        }
+        const userId = session?.user?.id || SINGLE_USER_ID;
 
         // Fetch user profile
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('user_id', session.user.id)
+            .eq('user_id', userId)
             .single();
 
         if (profileError) {
@@ -22,7 +23,14 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
         }
 
         if (!profile) {
-            return { profile: null };
+            return {
+                profile: null,
+                workouts: [],
+                workoutExercises: [],
+                weights: [],
+                cardio: [],
+                progressLevels: []
+            };
         }
 
         // Fetch progress levels
@@ -36,40 +44,51 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
             throw new Error('Failed to load progress levels');
         }
 
-        // Calculate date range for workouts (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        // Calculate date range for workouts (last 30 days for monthly progress)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        // Fetch workouts
+        // Fetch workouts (single-user mode - no user_id filter needed)
         const { data: workouts, error: workoutsError } = await supabase
             .from('workouts')
             .select('*')
-            .eq('user_id', session.user.id)
-            .gte('workout_date', sevenDaysAgo.toISOString());
+            .gte('workout_date', thirtyDaysAgo.toISOString())
+            .order('workout_date', { ascending: false });
 
         if (workoutsError) {
             console.error('Error fetching workouts:', workoutsError);
             throw new Error('Failed to load workouts');
         }
 
-        // If no workouts, return early with default values
+        // Fetch user weights (independent of workouts)
+        const { data: weights, error: weightError } = await supabase
+            .from('user_weights')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (weightError) {
+            console.error('Error fetching user weights:', weightError);
+        }
+
+        // If no workouts, return early with default values (but include weights)
         if (!workouts || workouts.length === 0) {
             return {
                 profile,
                 workouts: [],
                 workoutExercises: [],
-                weights: [],
+                weights: weights || [],
                 cardio: [],
                 progressLevels: progressLevels || []
             };
         }
-        // Get all demo IDs
-        const workoutIds = workouts.map((workout) => workout.workoutid);
-        // Use Promise.all to fetch cardio and demo exercises concurrently
-        const [cardioResult, workoutExercisesResult, weightResult] = await Promise.all([
+
+        // Get all workout IDs
+        const workoutIds = workouts.map((workout) => workout.id);
+
+        // Fetch cardio and workout exercises concurrently
+        const [cardioResult, workoutExercisesResult] = await Promise.all([
             supabase.from('workoutcardio').select('*').in('workoutid', workoutIds),
-            supabase.from('workoutexercises').select('*').in('workoutid', workoutIds),
-            supabase.from('user_weights').select('*').eq('user_id', session.user.id)
+            supabase.from('workoutexercises').select('*').in('workoutid', workoutIds)
         ]);
 
         // Check for errors in parallel queries
@@ -79,20 +98,15 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
         }
 
         if (workoutExercisesResult.error) {
-            console.error('Error fetching demo exercises:', workoutExercisesResult.error);
-            throw new Error('Failed to load demo exercises');
-        }
-
-        if (weightResult.error) {
-            console.error('Error fetching user weights:', weightResult.error);
-            throw new Error('Failed to load user weights');
+            console.error('Error fetching workout exercises:', workoutExercisesResult.error);
+            throw new Error('Failed to load workout exercises');
         }
 
         // Return all the data
         return {
             profile,
             workouts,
-            weights: weightResult.data || [],
+            weights: weights || [],
             workoutExercises: workoutExercisesResult.data || [],
             cardio: cardioResult.data || [],
             progressLevels: progressLevels || []

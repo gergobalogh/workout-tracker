@@ -96,19 +96,23 @@
 	}
 
 	async function completeExercise(index: number) {
-		if(!exercise.completed) {
+		const wasCompleted = exercise.completed;
+		if(!wasCompleted) {
 			showHint = true;
 			setTimeout(() => {
 				scrollToNextExercise();
 			}, 300); // Short delay to allow the state to update
 		}
+		// Toggle the completed state first so it saves correctly
+		toggleExerciseCompleted(index);
 		try {
-			await saveWorkoutExercise(exercise);
+			// Save with the new completed state
+			await saveWorkoutExercise({...exercise, completed: !wasCompleted});
 		} catch (error) {
 			console.error('Error saving exercise completion status:', error);
-			// You might want to add some error handling UI here
+			// Revert on error
+			toggleExerciseCompleted(index);
 		}
-		toggleExerciseCompleted(index);
 		setTimeout(() => {
 			showHint = false;
 		},  3500)
@@ -118,12 +122,8 @@
 			// Trigger the appropriate action if the threshold was passed
 			if (Math.abs(swipeState.currentX) > swipeThreshold) {
 				if (swipeState.direction === 'right') {
-				toggleExerciseCompleted(index);
-					if (!exercise.completed) {
-						setTimeout(() => {
-							scrollToNextExercise();
-						}, 300); // Short delay to allow state to update
-					}
+					// Use completeExercise to properly save to database
+					completeExercise(index);
 				} else if (swipeState.direction === 'left') {
 					openExerciseNotesModal(index);
 				}
