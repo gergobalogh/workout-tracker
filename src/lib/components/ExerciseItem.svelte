@@ -1,4 +1,5 @@
 <script lang='ts'>
+	import { PUBLIC_ALGOLIA_APP_ID, PUBLIC_ALGOLIA_SEARCH_KEY } from '$env/static/public';
 	import type {
 		Exercise,
 		handleWeightChangeFunction,
@@ -37,8 +38,8 @@
 	) => Promise<{ success: boolean; workoutId: string; exercise: any }>;
 
 
-	const ALGOLIA_APP_ID = 'OK539HIHRS';
-	const ALGOLIA_API_KEY = 'REMOVED_ALGOLIA_KEY';
+	const ALGOLIA_APP_ID = PUBLIC_ALGOLIA_APP_ID;
+	const ALGOLIA_API_KEY = PUBLIC_ALGOLIA_SEARCH_KEY;
 	const ALGOLIA_INDEX_NAME = 'exercises';
 	const SUPABASE_IMAGE_URL_BASE = 'https://kblntpobgrtueucxxnlm.supabase.co/storage/v1/object/public/exercise-images/';
 	// Handle touch events to track swipe in progress
